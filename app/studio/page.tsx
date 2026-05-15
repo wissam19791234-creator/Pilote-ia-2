@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Sparkles, Eye, FileText, Code2, Download, MessageSquare, LayoutGrid } from 'lucide-react'
+import { Sparkles, Eye, FileText, Code2, Download, MessageSquare, LayoutGrid, Zap } from 'lucide-react'
 import type { ChatMessage, GeneratedProject, StudioTab } from '@/types'
-import { generateProject, refineProject } from '@/lib/generator'
 import { getCredits, consumeCredit } from '@/lib/credits'
 import Sidebar from '@/components/Sidebar'
 import ChatPanel from '@/components/ChatPanel'
@@ -21,43 +20,36 @@ import { cn } from '@/lib/utils'
 const WELCOME: ChatMessage = {
   id: 'welcome',
   role: 'assistant',
-  content: `Bonjour ! Je suis SitePilot AI 👋\n\nDécris le commerce pour lequel tu veux créer un site (nom, ville, secteur, style, objectif…) et je génère une maquette complète en quelques secondes.\n\nTu peux aussi ajouter des photos et utiliser les suggestions rapides ci-dessous.`,
+  content: `Bonjour ! Je suis SitePilot AI, propulsé par Claude ✦\n\nDécris le commerce pour lequel tu veux créer un site — ville, secteur, style, objectif… Plus tu es précis, meilleur sera le résultat.\n\nJ'analyse ton brief, génère le copywriting, le design et le HTML en quelques secondes.`,
   timestamp: new Date().toISOString(),
 }
 
 const TABS = [
   { id: 'preview' as const, label: 'Preview', icon: Eye },
-  { id: 'plan' as const, label: 'Plan', icon: LayoutGrid },
+  { id: 'plan' as const, label: 'Analyse', icon: LayoutGrid },
   { id: 'files' as const, label: 'Fichiers', icon: FileText },
   { id: 'code' as const, label: 'Code', icon: Code2 },
   { id: 'export' as const, label: 'Export', icon: Download },
   { id: 'message' as const, label: 'Message', icon: MessageSquare },
 ]
 
-const GENERATION_STEPS = [
-  'Analyse du commerce et du marché',
-  'Détection du secteur et de la niche',
-  'Création de l\'architecture UX',
-  'Génération du copywriting persuasif',
-  'Création du design system personnalisé',
-  'Intégration des photos uploadées',
-  'Ajout des automatisations IA',
-  'Création du formulaire intelligent',
-  'Génération du code HTML/CSS',
-  'Optimisation mobile et responsive',
-  'Préparation de l\'export et du message client',
-]
+const TOTAL_STEPS = 11
 
-const MODIFICATION_KEYWORDS = [
-  'plus luxe', 'plus premium', 'plus coloré', 'plus vendeur', 'plus conversion',
+const MODIFICATION_TRIGGERS = [
+  'plus luxe', 'plus premium', 'plus coloré', 'plus vendeur', 'plus sombre',
   'ajoute whatsapp', 'ajoute devis', 'section ecommerce', 'change couleur',
-  'rends', 'modifie', 'ajoute', 'supprime', 'change', 'mets', 'met',
+  'rends', 'modifie', 'ajoute', 'supprime', 'change', 'mets', 'met ',
+  'refais', 'améliore', 'update',
 ]
 
 function isModification(text: string, hasProject: boolean): boolean {
   if (!hasProject) return false
   const lower = text.toLowerCase()
-  return MODIFICATION_KEYWORDS.some((kw) => lower.includes(kw))
+  return MODIFICATION_TRIGGERS.some((kw) => lower.includes(kw))
+}
+
+function newMsg(role: ChatMessage['role'], content: string): ChatMessage {
+  return { id: `msg_${Date.now()}_${Math.random()}`, role, content, timestamp: new Date().toISOString() }
 }
 
 export default function StudioPage() {
@@ -67,6 +59,7 @@ export default function StudioPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationStep, setGenerationStep] = useState(0)
   const [generationProgress, setGenerationProgress] = useState(0)
+  const [generationMode, setGenerationMode] = useState<string>('')
   const [activeTab, setActiveTab] = useState<StudioTab>('preview')
   const [credits, setCredits] = useState(12)
   const [selectedFile, setSelectedFile] = useState('index.html')
@@ -77,86 +70,84 @@ export default function StudioPage() {
     setCredits(getCredits())
   }, [])
 
-  const addMessage = useCallback((role: ChatMessage['role'], content: string) => {
-    const msg: ChatMessage = {
-      id: `msg_${Date.now()}`,
-      role,
-      content,
-      timestamp: new Date().toISOString(),
-    }
-    setMessages((prev) => [...prev, msg])
+  const addMsg = useCallback((role: ChatMessage['role'], content: string) => {
+    setMessages((prev) => [...prev, newMsg(role, content)])
   }, [])
 
   const runGeneration = useCallback(async (prompt: string, isRefine: boolean) => {
     if (!consumeCredit()) {
-      addMessage('assistant', '❌ Vous n\'avez plus de crédits. Upgradez votre plan pour continuer à générer des sites.')
+      addMsg('assistant', '❌ Plus de crédits disponibles. Upgradez votre plan pour continuer à générer des sites.')
       return
     }
 
     setIsGenerating(true)
     setGenerationStep(0)
     setGenerationProgress(0)
-    setActiveTab('preview')
+    setGenerationMode('')
 
-    const totalSteps = GENERATION_STEPS.length
+    // Animate steps in parallel with API call
     let step = 0
-
     intervalRef.current = setInterval(() => {
-      step++
+      step = Math.min(step + 1, TOTAL_STEPS - 1)
       setGenerationStep(step)
-      setGenerationProgress(Math.round((step / totalSteps) * 100))
-      if (step >= totalSteps) {
-        if (intervalRef.current) clearInterval(intervalRef.current)
+      setGenerationProgress(Math.round((step / TOTAL_STEPS) * 85))
+    }, 900)
+
+    try {
+      const endpoint = isRefine ? '/api/refine' : '/api/generate'
+      const body = isRefine && currentProject
+        ? { instruction: prompt, project: currentProject, photos }
+        : { prompt, photos }
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      if (!res.ok) {
+        const err = await res.json() as { error?: string }
+        throw new Error(err.error ?? `Erreur ${res.status}`)
       }
-    }, 800)
 
-    await new Promise((r) => setTimeout(r, totalSteps * 800 + 400))
+      const data = await res.json() as { project: GeneratedProject; mode?: string }
 
-    if (intervalRef.current) clearInterval(intervalRef.current)
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      setGenerationStep(TOTAL_STEPS)
+      setGenerationProgress(100)
+      setGenerationMode(data.mode ?? 'local')
 
-    let project: GeneratedProject
-    if (isRefine && currentProject) {
-      project = refineProject(currentProject, prompt)
-    } else {
-      project = generateProject(prompt, photos)
+      setCurrentProject(data.project)
+      setCredits(getCredits())
+      window.dispatchEvent(new Event('credits-updated'))
+
+      const modeLabel = data.mode === 'ai' ? '✦ Claude AI' : data.mode === 'local-fallback' ? '(mode local)' : '(mode local)'
+      const msg = isRefine
+        ? `✅ Modifications appliquées ${modeLabel}\n\nLe site a été mis à jour selon vos instructions.`
+        : `✅ Site généré ${modeLabel} !\n\n🏢 **${data.project.businessName}** — ${data.project.city}\n🎯 Secteur : ${data.project.sector}\n📋 ${data.project.sections.length} sections générées\n${data.project.automationNeeds.length > 0 ? `🤖 Automations : ${data.project.automationNeeds.join(', ')}\n` : ''}💌 Message client prêt\n\nModifiez le site en tapant vos instructions ici.`
+
+      addMsg('assistant', msg)
+      setActiveTab('preview')
+    } catch (err) {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      const message = err instanceof Error ? err.message : 'Erreur inconnue'
+      addMsg('assistant', `❌ Erreur lors de la génération : ${message}\n\nRéessayez ou simplifiez votre description.`)
+    } finally {
+      setIsGenerating(false)
     }
-
-    setCurrentProject(project)
-    setGenerationStep(totalSteps)
-    setGenerationProgress(100)
-    setIsGenerating(false)
-    setCredits(getCredits())
-    window.dispatchEvent(new Event('credits-updated'))
-
-    addMessage(
-      'assistant',
-      isRefine
-        ? `✅ Modifications appliquées !\n\nJ'ai mis à jour le design selon vos instructions. Consultez la preview pour voir les changements.`
-        : `✅ Site généré avec succès !\n\n🎨 **${project.businessName}** — ${project.city}\n📁 ${project.sections.length} sections créées\n${project.automationNeeds.length > 0 ? `🤖 ${project.automationNeeds.join(', ')}\n` : ''}💌 Message client prêt\n\nVous pouvez modifier le design en tapant des instructions ici, ou exporter directement.`,
-    )
-
-    setActiveTab('preview')
-  }, [currentProject, photos, addMessage])
+  }, [currentProject, photos, addMsg])
 
   const handleGenerate = useCallback((prompt: string) => {
-    addMessage('user', prompt)
-
+    addMsg('user', prompt)
     const isMod = isModification(prompt, !!currentProject)
-    addMessage(
-      'assistant',
-      isMod
-        ? `🔄 Modification en cours...\n\nJ'applique vos instructions sur le site existant.`
-        : `🚀 Génération en cours...\n\nJ'analyse votre demande et je crée votre site premium. Cela prend environ 10 secondes.`,
+    addMsg('assistant', isMod
+      ? '🔄 Modification en cours…\nJ\'applique vos instructions avec Claude AI.'
+      : '🚀 Génération en cours…\nClaude AI analyse votre brief et crée votre site.',
     )
-
     void runGeneration(prompt, isMod)
-  }, [addMessage, currentProject, runGeneration])
+  }, [addMsg, currentProject, runGeneration])
 
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [])
+  useEffect(() => () => { if (intervalRef.current) clearInterval(intervalRef.current) }, [])
 
   const noProject = !currentProject
 
@@ -167,27 +158,43 @@ export default function StudioPage() {
         <Sidebar />
       </div>
 
-      {/* Chat */}
-      <div className="w-full lg:w-[360px] shrink-0 flex flex-col border-r border-border bg-white">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-          <div className="w-8 h-8 rounded-full gradient-bg flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-white" />
+      {/* Chat column */}
+      <div className="w-full lg:w-[360px] shrink-0 flex flex-col border-r border-border bg-[#09090f]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-[#0a0a14]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center shadow-glow-sm">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <p className="font-syne font-bold text-sm text-ink">SitePilot AI</p>
+              <p className="text-[10px] text-muted flex items-center gap-1">
+                <Zap className="w-2.5 h-2.5" />
+                {credits} crédit{credits !== 1 ? 's' : ''} · Claude AI
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="font-syne font-bold text-sm text-ink">SitePilot AI</p>
-            <p className="text-[10px] text-muted">{credits} crédit{credits !== 1 ? 's' : ''} restant{credits !== 1 ? 's' : ''}</p>
+          <div className="flex items-center gap-1.5">
+            {[...Array(Math.min(credits, 5))].map((_, i) => (
+              <div key={i} className="w-1.5 h-1.5 rounded-full bg-primary shadow-glow-sm" />
+            ))}
+            {credits > 5 && <span className="text-[10px] text-muted">+{credits - 5}</span>}
           </div>
         </div>
 
         {isGenerating ? (
-          <LoadingSteps currentStep={generationStep} progress={generationProgress} />
+          <LoadingSteps
+            currentStep={generationStep}
+            progress={generationProgress}
+            mode={generationMode}
+          />
         ) : (
           <ChatPanel messages={messages} />
         )}
 
-        {/* Photo uploader (toggle) */}
+        {/* Photo uploader */}
         {showPhotos && (
-          <div className="px-4 pb-3 border-t border-border pt-3">
+          <div className="px-4 pb-3 border-t border-border pt-3 bg-[#09090f]">
             <PhotoUploader photos={photos} onChange={setPhotos} />
           </div>
         )}
@@ -200,10 +207,10 @@ export default function StudioPage() {
         />
       </div>
 
-      {/* Main preview area */}
+      {/* Main area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Tabs */}
-        <div className="flex items-center gap-1 px-4 py-2 border-b border-border bg-white overflow-x-auto">
+        <div className="flex items-center gap-1 px-3 py-2 border-b border-border bg-[#0a0a14] overflow-x-auto">
           {TABS.map((tab) => {
             const disabled = noProject && tab.id !== 'preview'
             const Icon = tab.icon
@@ -215,10 +222,10 @@ export default function StudioPage() {
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap',
                   activeTab === tab.id
-                    ? 'bg-orange/10 text-orange font-bold'
+                    ? 'bg-primary/15 text-primary-light border border-primary/20'
                     : disabled
-                    ? 'text-muted/40 cursor-not-allowed'
-                    : 'text-muted hover:text-ink hover:bg-black/5',
+                    ? 'text-muted/25 cursor-not-allowed'
+                    : 'text-muted hover:text-ink hover:bg-white/5',
                 )}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -229,7 +236,7 @@ export default function StudioPage() {
         </div>
 
         {/* Tab content */}
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-hidden flex flex-col bg-surface">
           {activeTab === 'preview' && (
             <SitePreview html={currentProject?.html ?? null} isGenerating={isGenerating} />
           )}
@@ -239,7 +246,7 @@ export default function StudioPage() {
             </div>
           )}
           {activeTab === 'files' && currentProject && (
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto bg-[#0a0a14]">
               <FileExplorer
                 project={currentProject}
                 selectedFile={selectedFile}

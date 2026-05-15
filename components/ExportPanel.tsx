@@ -6,9 +6,7 @@ import type { GeneratedProject } from '@/types'
 import { saveProject } from '@/lib/storage'
 import Badge from './Badge'
 
-interface ExportPanelProps {
-  project: GeneratedProject
-}
+interface ExportPanelProps { project: GeneratedProject }
 
 export default function ExportPanel({ project }: ExportPanelProps) {
   const [copied, setCopied] = useState(false)
@@ -17,11 +15,8 @@ export default function ExportPanel({ project }: ExportPanelProps) {
   const copyHTML = async () => {
     try {
       await navigator.clipboard.writeText(project.html)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2500)
-    } catch {
-      // clipboard unavailable
-    }
+      setCopied(true); setTimeout(() => setCopied(false), 2500)
+    } catch { /* clipboard unavailable */ }
   }
 
   const downloadHTML = () => {
@@ -36,14 +31,17 @@ export default function ExportPanel({ project }: ExportPanelProps) {
 
   const save = () => {
     saveProject({ ...project, status: 'exported' })
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2500)
+    setSaved(true); setTimeout(() => setSaved(false), 2500)
   }
 
   const htmlSize = new Blob([project.html]).size
-  const humanSize = htmlSize > 1024 * 1024
-    ? `${(htmlSize / (1024 * 1024)).toFixed(1)} MB`
-    : `${Math.round(htmlSize / 1024)} KB`
+  const humanSize = htmlSize > 1024 * 1024 ? `${(htmlSize / (1024 * 1024)).toFixed(1)} MB` : `${Math.round(htmlSize / 1024)} KB`
+
+  const actions = [
+    { icon: copied ? Check : Copy, label: copied ? 'Copié !' : 'Copier HTML', sub: 'Copiez le code dans votre presse-papier', color: 'text-primary-light', bg: 'bg-primary/10', hover: 'hover:border-primary/40', onClick: copyHTML },
+    { icon: Download, label: 'Télécharger HTML', sub: 'Fichier standalone, tout inline', color: 'text-accent', bg: 'bg-accent/10', hover: 'hover:border-accent/40', onClick: downloadHTML },
+    { icon: saved ? Check : Save, label: saved ? 'Sauvegardé !' : 'Sauvegarder', sub: 'Stockage local — accessible depuis Projets', color: 'text-green', bg: 'bg-green/10', hover: 'hover:border-green/40', onClick: save },
+  ]
 
   return (
     <div className="flex flex-col gap-5 p-5">
@@ -52,50 +50,30 @@ export default function ExportPanel({ project }: ExportPanelProps) {
         <p className="text-sm text-muted">Votre site est prêt à être livré ou hébergé.</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
-        {[
-          ['Taille HTML', humanSize],
-          ['Sections', project.sections.length.toString()],
-          ['Photos', project.photos.length.toString()],
-          ['Généré le', new Date(project.createdAt).toLocaleDateString('fr-FR')],
-        ].map(([k, v]) => (
-          <div key={k} className="bg-surface border border-border rounded-xl p-3">
+        {[['Taille HTML', humanSize], ['Sections', String(project.sections.length)], ['Photos', String(project.photos.length)], ['Généré le', new Date(project.createdAt).toLocaleDateString('fr-FR')]].map(([k, v]) => (
+          <div key={k} className="bg-card border border-border rounded-xl p-3">
             <p className="text-[10px] text-muted">{k}</p>
             <p className="text-sm font-bold text-ink">{v}</p>
           </div>
         ))}
       </div>
 
-      {/* Actions */}
       <div className="flex flex-col gap-3">
-        <button
-          onClick={copyHTML}
-          className="flex items-center gap-3 p-4 rounded-xl border border-border bg-white hover:border-orange hover:bg-orange/5 transition-all group"
-        >
-          <div className="w-10 h-10 rounded-xl bg-orange/10 flex items-center justify-center">
-            {copied ? <Check className="w-5 h-5 text-green" /> : <Copy className="w-5 h-5 text-orange" />}
-          </div>
-          <div className="text-left flex-1">
-            <p className="font-semibold text-ink text-sm">{copied ? 'Copié !' : 'Copier HTML'}</p>
-            <p className="text-xs text-muted">Copiez le code dans votre presse-papier</p>
-          </div>
-        </button>
+        {actions.map((a) => (
+          <button key={a.label} onClick={a.onClick}
+            className={`flex items-center gap-3 p-4 rounded-xl border border-border bg-card ${a.hover} transition-all`}>
+            <div className={`w-10 h-10 rounded-xl ${a.bg} flex items-center justify-center`}>
+              <a.icon className={`w-5 h-5 ${a.color}`} />
+            </div>
+            <div className="text-left flex-1">
+              <p className="font-semibold text-ink text-sm">{a.label}</p>
+              <p className="text-xs text-muted">{a.sub}</p>
+            </div>
+          </button>
+        ))}
 
-        <button
-          onClick={downloadHTML}
-          className="flex items-center gap-3 p-4 rounded-xl border border-border bg-white hover:border-blue hover:bg-blue/5 transition-all"
-        >
-          <div className="w-10 h-10 rounded-xl bg-blue/10 flex items-center justify-center">
-            <Download className="w-5 h-5 text-blue" />
-          </div>
-          <div className="text-left flex-1">
-            <p className="font-semibold text-ink text-sm">Télécharger HTML</p>
-            <p className="text-xs text-muted">Fichier standalone, tout inline</p>
-          </div>
-        </button>
-
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-gray-50 opacity-60 cursor-not-allowed">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card/50 opacity-50 cursor-not-allowed">
           <div className="w-10 h-10 rounded-xl bg-violet/10 flex items-center justify-center">
             <Archive className="w-5 h-5 text-violet" />
           </div>
@@ -107,19 +85,6 @@ export default function ExportPanel({ project }: ExportPanelProps) {
             <p className="text-xs text-muted">HTML + CSS + JS séparés</p>
           </div>
         </div>
-
-        <button
-          onClick={save}
-          className="flex items-center gap-3 p-4 rounded-xl border border-border bg-white hover:border-green hover:bg-green/5 transition-all"
-        >
-          <div className="w-10 h-10 rounded-xl bg-green/10 flex items-center justify-center">
-            {saved ? <Check className="w-5 h-5 text-green" /> : <Save className="w-5 h-5 text-green" />}
-          </div>
-          <div className="text-left flex-1">
-            <p className="font-semibold text-ink text-sm">{saved ? 'Sauvegardé !' : 'Sauvegarder le projet'}</p>
-            <p className="text-xs text-muted">Stockage local, accessible depuis Projets</p>
-          </div>
-        </button>
       </div>
     </div>
   )
