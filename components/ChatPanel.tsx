@@ -21,38 +21,33 @@ export default function ChatPanel({ messages }: ChatPanelProps) {
   }, [messages])
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+    <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
       {messages.map((msg) => (
         <div
           key={msg.id}
           className={cn(
-            'flex gap-3 animate-fade-in',
+            'flex gap-2.5 animate-fade-in',
             msg.role === 'user' ? 'flex-row-reverse' : 'flex-row',
           )}
         >
-          {/* Avatar */}
           {msg.role === 'assistant' && (
-            <div className="w-8 h-8 rounded-full gradient-bg flex items-center justify-center shrink-0">
-              <Sparkles className="w-4 h-4 text-white" />
+            <div className="w-7 h-7 rounded-lg gradient-bg flex items-center justify-center shrink-0 mt-0.5 shadow-glow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-white" />
             </div>
           )}
-
-          {/* Bubble */}
           <div
             className={cn(
-              'max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed',
+              'max-w-[82%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed',
               msg.role === 'user'
-                ? 'bg-gradient-to-br from-orange to-rose text-white rounded-tr-sm'
-                : 'bg-white border border-border text-ink shadow-card rounded-tl-sm',
+                ? 'bg-primary text-white rounded-tr-sm shadow-primary'
+                : 'bg-card border border-border text-ink rounded-tl-sm',
             )}
           >
             <p className="whitespace-pre-wrap">{msg.content}</p>
-            <p
-              className={cn(
-                'text-[10px] mt-1.5',
-                msg.role === 'user' ? 'text-white/70 text-right' : 'text-muted',
-              )}
-            >
+            <p className={cn(
+              'text-[10px] mt-1',
+              msg.role === 'user' ? 'text-white/50 text-right' : 'text-muted',
+            )}>
               {formatTime(msg.timestamp)}
             </p>
           </div>
