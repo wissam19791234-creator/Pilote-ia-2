@@ -82,6 +82,11 @@ export interface GeneratedProject {
   files: GeneratedFile[]
   html: string
   photos: string[]
+  automationSalesOptions: AutomationSalesOption[]
+  recommendedPacks: RecommendedPack[]
+  automationArgumentary: string[]
+  automationPriceScript: string
+  automationReadyMessage: string
   createdAt: string
   status: 'draft' | 'generated' | 'exported'
 }
@@ -93,4 +98,23 @@ export interface ChatMessage {
   timestamp: string
 }
 
-export type StudioTab = 'preview' | 'plan' | 'files' | 'code' | 'export' | 'message'
+export interface AutomationSalesOption {
+  key: string
+  name: string
+  problemSolved: string
+  businessBenefit: string
+  complexity: 'simple' | 'moyenne' | 'avancée'
+  perceivedValue: 'faible' | 'forte' | 'premium'
+  salesPitch: string
+  recommended: boolean
+  details: string[]
+}
+
+export interface RecommendedPack {
+  id: 'pack-1' | 'pack-2' | 'pack-3'
+  name: string
+  includes: string[]
+  positioning: string
+}
+
+export type StudioTab = 'preview' | 'plan' | 'files' | 'code' | 'export' | 'message' | 'automations'

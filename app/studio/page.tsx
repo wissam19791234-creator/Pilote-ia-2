@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Sparkles, Eye, FileText, Code2, Download, MessageSquare, LayoutGrid, Zap } from 'lucide-react'
+import { Sparkles, Eye, FileText, Code2, Download, MessageSquare, LayoutGrid, Zap, Bot } from 'lucide-react'
 import type { ChatMessage, GeneratedProject, StudioTab } from '@/types'
 import { getCredits, consumeCredit } from '@/lib/credits'
 import Sidebar from '@/components/Sidebar'
@@ -14,6 +14,7 @@ import FileExplorer from '@/components/FileExplorer'
 import CodePanel from '@/components/CodePanel'
 import ExportPanel from '@/components/ExportPanel'
 import ClientMessagePanel from '@/components/ClientMessagePanel'
+import AutomationSalesPanel from '@/components/AutomationSalesPanel'
 import PhotoUploader from '@/components/PhotoUploader'
 import { cn } from '@/lib/utils'
 
@@ -31,6 +32,7 @@ const TABS = [
   { id: 'code' as const, label: 'Code', icon: Code2 },
   { id: 'export' as const, label: 'Export', icon: Download },
   { id: 'message' as const, label: 'Message', icon: MessageSquare },
+  { id: 'automations' as const, label: 'Automatisations à vendre', icon: Bot },
 ]
 
 const TOTAL_STEPS = 11
@@ -265,6 +267,11 @@ export default function StudioPage() {
           {activeTab === 'message' && currentProject && (
             <div className="flex-1 overflow-y-auto">
               <ClientMessagePanel project={currentProject} />
+            </div>
+          )}
+          {activeTab === 'automations' && currentProject && (
+            <div className="flex-1 overflow-y-auto">
+              <AutomationSalesPanel project={currentProject} />
             </div>
           )}
         </div>
