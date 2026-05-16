@@ -7,6 +7,8 @@ interface StudioState {
   messages: ChatMessage[]
   // Photos
   photos: string[]
+  // Videos
+  videos: string[]
   // Generation
   isGenerating: boolean
   generationJob: GenerationJob | null
@@ -31,6 +33,9 @@ interface StudioActions {
   addPhoto: (dataUrl: string) => void
   removePhoto: (index: number) => void
   clearPhotos: () => void
+  addVideo: (dataUrl: string) => void
+  removeVideo: (index: number) => void
+  clearVideos: () => void
   setIsGenerating: (v: boolean) => void
   setGenerationJob: (job: GenerationJob | null) => void
   setGenerationMode: (mode: string) => void
@@ -60,6 +65,7 @@ const WELCOME: ChatMessage = {
 const INITIAL_STATE: StudioState = {
   messages: [WELCOME],
   photos: [],
+  videos: [],
   isGenerating: false,
   generationJob: null,
   generationMode: '',
@@ -87,6 +93,14 @@ export const useStudioStore = create<StudioState & StudioActions>((set, get) => 
     set((s) => ({ photos: s.photos.filter((_, i) => i !== index) })),
 
   clearPhotos: () => set({ photos: [] }),
+
+  addVideo: (dataUrl) =>
+    set((s) => ({ videos: s.videos.length < 3 ? [...s.videos, dataUrl] : s.videos })),
+
+  removeVideo: (index) =>
+    set((s) => ({ videos: s.videos.filter((_, i) => i !== index) })),
+
+  clearVideos: () => set({ videos: [] }),
 
   setIsGenerating: (v) => set({ isGenerating: v }),
 

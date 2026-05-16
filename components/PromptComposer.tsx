@@ -59,14 +59,14 @@ export default function PromptComposer({ onGenerate, onPhotoClick, isGenerating,
   }
 
   return (
-    <div className="flex flex-col gap-2.5 p-3 border-t border-border bg-[#0a0a14]">
+    <div className="flex flex-col gap-2.5 p-3 border-t border-border bg-surface-soft">
       {/* Suggestions */}
       <div className="flex flex-wrap gap-1.5">
         {SUGGESTIONS.map((s) => (
           <button
             key={s}
             onClick={() => { setValue(s); textareaRef.current?.focus() }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary-light text-xs font-medium hover:bg-primary/20 transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-border text-muted text-xs font-medium hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-colors"
           >
             <ChevronRight className="w-3 h-3" />
             {s}
@@ -104,8 +104,8 @@ export default function PromptComposer({ onGenerate, onPhotoClick, isGenerating,
           className={cn(
             'flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm transition-all',
             photoCount > 0
-              ? 'border-primary/40 text-primary-light bg-primary/10'
-              : 'border-border text-muted hover:border-primary/40 hover:text-ink',
+              ? 'border-primary/40 text-primary bg-primary/10'
+              : 'border-border text-muted hover:border-primary/40 hover:text-ink bg-white',
           )}
         >
           <ImageIcon className="w-4 h-4" />
