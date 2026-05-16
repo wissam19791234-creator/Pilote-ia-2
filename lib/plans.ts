@@ -22,6 +22,17 @@ export interface Plan {
   supportLevel: 'community' | 'email' | 'priority' | 'dedicated'
 }
 
+export interface PlanWithStripe extends Plan {
+  stripeLink?: string
+}
+
+export const STRIPE_LINKS: Record<PlanId, string | null> = {
+  free: null,
+  starter: 'https://buy.stripe.com/eVq7sE0WSbZN7b52FyfjG04',
+  pro: 'https://buy.stripe.com/bJe8wIdJEfbZdzt2FyfjG05',
+  agency: 'https://buy.stripe.com/bJe7sEeNI1l9anh93WfjG06',
+}
+
 export const PLANS: Record<PlanId, Plan> = {
   free: {
     id: 'free',
@@ -48,8 +59,8 @@ export const PLANS: Record<PlanId, Plan> = {
     id: 'starter',
     name: 'Starter',
     price: 19,
-    monthlyCredits: 20,
-    maxSitesPerMonth: 5,
+    monthlyCredits: 8,
+    maxSitesPerMonth: 8,
     maxSavedProjects: 5,
     canExportHtml: true,
     canExportZip: false,
@@ -68,9 +79,9 @@ export const PLANS: Record<PlanId, Plan> = {
   pro: {
     id: 'pro',
     name: 'Pro',
-    price: 39,
-    monthlyCredits: 80,
-    maxSitesPerMonth: 20,
+    price: 59,
+    monthlyCredits: 25,
+    maxSitesPerMonth: 25,
     maxSavedProjects: 50,
     canExportHtml: true,
     canExportZip: true,
@@ -89,9 +100,9 @@ export const PLANS: Record<PlanId, Plan> = {
   agency: {
     id: 'agency',
     name: 'Agency',
-    price: 79,
-    monthlyCredits: 250,
-    maxSitesPerMonth: 60,
+    price: 149,
+    monthlyCredits: 80,
+    maxSitesPerMonth: 80,
     maxSavedProjects: -1,
     canExportHtml: true,
     canExportZip: true,

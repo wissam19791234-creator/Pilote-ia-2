@@ -10,10 +10,10 @@ import { cn } from '@/lib/utils'
 // ─── Table data ───────────────────────────────────────────────────────────────
 
 const COLUMNS = [
-  { id: 'free',    label: 'Free',    price: 0,  cta: 'Commencer gratuit', href: '/studio', recommended: false },
-  { id: 'starter', label: 'Starter', price: 19, cta: 'Choisir Starter',   href: '/studio', recommended: false },
-  { id: 'pro',     label: 'Pro',     price: 39, cta: 'Choisir Pro',       href: '/studio', recommended: true  },
-  { id: 'agency',  label: 'Agency',  price: 79, cta: 'Choisir Agency',    href: '/studio', recommended: false },
+  { id: 'free',    label: 'Free',    price: 0,   cta: 'Commencer gratuit', href: '/studio',                                                          recommended: false },
+  { id: 'starter', label: 'Starter', price: 19,  cta: 'Choisir Starter',   href: 'https://buy.stripe.com/eVq7sE0WSbZN7b52FyfjG04', recommended: false },
+  { id: 'pro',     label: 'Pro',     price: 59,  cta: 'Choisir Pro',       href: 'https://buy.stripe.com/bJe8wIdJEfbZdzt2FyfjG05', recommended: true  },
+  { id: 'agency',  label: 'Agency',  price: 149, cta: 'Choisir Agency',    href: 'https://buy.stripe.com/bJe7sEeNI1l9anh93WfjG06', recommended: false },
 ]
 
 type CellValue = string | boolean
@@ -25,9 +25,9 @@ interface TableRow {
 }
 
 const ROWS: TableRow[] = [
-  { label: 'Prix/mois',              values: ['0€', '19€', '39€', '79€'] },
-  { label: 'Crédits/mois',           values: ['2', '20', '80', '250'] },
-  { label: 'Sites/mois',             values: ['1', '5', '20', '60'] },
+  { label: 'Prix/mois',              values: ['0€', '19€', '59€', '149€'] },
+  { label: 'Crédits/mois',           values: ['2', '8', '25', '80'] },
+  { label: 'Sites/mois',             values: ['1', '8', '25', '80'] },
   { label: 'Projets sauvegardés',    values: ['1', '5', '50', 'Illimité'] },
   { label: 'Export HTML',            values: [false, true, true, true] },
   { label: 'Export ZIP',             values: [false, false, true, true] },
@@ -46,7 +46,7 @@ const ROWS: TableRow[] = [
 const FAQ_ITEMS = [
   {
     q: "Qu'est-ce qu'un crédit ?",
-    a: "Un crédit correspond à une action réalisée par l'IA : générer un site coûte 5 crédits, un chatbot simple 6 crédits, une vidéo 15 crédits, etc. Les crédits se renouvellent chaque mois selon votre plan.",
+    a: "Un crédit correspond à une action réalisée par l'IA : générer un site coûte 1 crédit, une vidéo 3 crédits, un chatbot 2 crédits. Les crédits se renouvellent chaque mois selon votre plan.",
   },
   {
     q: 'Le plan Pro inclut-il le chatbot ?',
