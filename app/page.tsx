@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Zap, Sparkles, ArrowRight, Check, Star, TrendingUp, Clock, Shield, Users } from 'lucide-react'
+import { Zap, Sparkles, ArrowRight, Check, Star, Shield } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import FAQ from '@/components/FAQ'
@@ -31,8 +31,8 @@ const SECTORS = [
 const STEPS = [
   { num: '01', title: 'Décris le commerce', desc: 'Nom, ville, secteur, style, objectif. Plus tu es précis, meilleur sera le résultat. 3 lignes suffisent.' },
   { num: '02', title: 'Ajoute des photos (optionnel)', desc: 'Upload jusqu\'à 8 photos. Elles s\'intègrent directement dans la galerie et le hero du site généré.' },
-  { num: '03', title: 'Claude génère tout', desc: 'Copywriting persuasif, design adapté au secteur, formulaire intelligent et HTML complet. En moins de 30 secondes.' },
-  { num: '04', title: 'Exporte et facture', desc: 'Télécharge le fichier HTML standalone. Héberge-le n\'importe où. Facture le client. Recommence.' },
+  { num: '03', title: 'Claude génère la maquette', desc: 'Copywriting adapté au secteur, design personnalisé, formulaire de contact et HTML complet prêt à héberger.' },
+  { num: '04', title: 'Exporte et présente', desc: 'Télécharge le fichier HTML standalone. Héberge-le sur n\'importe quel serveur. Présente la démo au commerce.' },
 ]
 
 const TESTIMONIALS = [
@@ -41,8 +41,7 @@ const TESTIMONIALS = [
     role: 'Freelance web à Paris',
     avatar: 'FB',
     color: 'from-violet-500 to-purple-600',
-    content: 'J\'ai généré un site pour un salon de coiffure en 45 secondes. Le client était bluffé par le résultat. J\'ai facturé 550€ pour 45 secondes de travail. Je l\'utilise maintenant pour tous mes avant-vente.',
-    revenue: '+550€',
+    content: 'J\'utilise SitePilot pour préparer mes avant-vente. Je génère une maquette pendant le rendez-vous, le client voit concrètement ce que ça pourrait donner pour son commerce. C\'est très utile.',
     tag: 'Beauté · Paris',
     stars: 5,
   },
@@ -51,8 +50,7 @@ const TESTIMONIALS = [
     role: 'Designer indépendante · Lyon',
     avatar: 'AK',
     color: 'from-cyan-500 to-blue-600',
-    content: 'Avant je passais 2 jours sur une maquette Figma pour convaincre un client. Maintenant c\'est 60 secondes avec SitePilot. J\'ai fermé 3 contrats en une semaine grâce aux maquettes générées.',
-    revenue: 'x3 contrats',
+    content: 'Avant je passais beaucoup de temps sur des maquettes Figma pour convaincre un client. SitePilot me permet de préparer une démo structurée rapidement, ce qui facilite la discussion.',
     tag: 'Restaurant · Lyon',
     stars: 5,
   },
@@ -61,8 +59,7 @@ const TESTIMONIALS = [
     role: 'Agence web · Marseille',
     avatar: 'TM',
     color: 'from-emerald-500 to-green-600',
-    content: 'On utilise SitePilot pour toutes nos maquettes avant-vente. Notre taux de conversion des devis est passé de 32% à 71% depuis qu\'on montre un site complet dès le premier rendez-vous.',
-    revenue: '+71% closing',
+    content: 'On utilise SitePilot pour nos maquettes avant-vente. Montrer un site complet dès le premier rendez-vous aide le client à se projeter. Ça rend nos présentations plus concrètes.',
     tag: 'Agence · Marseille',
     stars: 5,
   },
@@ -88,7 +85,7 @@ export default function HomePage() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-green" />
                 </span>
-                Claude AI actif · 2 847 sites générés
+                Claude AI actif · Propulsé par Anthropic
               </div>
 
               <h1
@@ -97,14 +94,14 @@ export default function HomePage() {
               >
                 Sites premium<br />
                 pour commerces<br />
-                <span className="gradient-text">en 60 secondes.</span>
+                <span className="gradient-text">rapidement.</span>
               </h1>
 
-              {/* ROI hook */}
+              {/* Value hook */}
               <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 rounded-xl px-4 py-2.5 mb-6">
-                <TrendingUp className="w-4 h-4 text-accent shrink-0" />
+                <Sparkles className="w-4 h-4 text-accent shrink-0" />
                 <p className="text-sm font-semibold text-ink">
-                  Facturez <span className="text-accent">400–800€/site.</span> Généré en 60 secondes. ROI immédiat.
+                  Générez une maquette structurée. <span className="text-accent">Préparez une démo pour le commerce.</span>
                 </p>
               </div>
 
@@ -145,7 +142,7 @@ export default function HomePage() {
                       <Star key={i} className="w-3.5 h-3.5 fill-yellow text-yellow" />
                     ))}
                   </div>
-                  <span className="text-muted">4.9/5 · 200+ freelances</span>
+                  <span className="text-muted">Satisfaction clients</span>
                 </div>
               </div>
             </div>
@@ -254,15 +251,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════════════ STATS BAR ═══════════════════════ */}
-      <section className="py-12 px-6 border-y border-border bg-surface/60">
+      {/* ═══════════════════════ TRUST BAR ═══════════════════════ */}
+      <section className="py-10 px-6 border-y border-border bg-surface/60">
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
-              { value: '2 847', label: 'Sites générés', icon: '🌐' },
-              { value: '60 sec', label: 'Temps moyen', icon: '⚡' },
-              { value: '200+', label: 'Freelances actifs', icon: '👨‍💻' },
-              { value: '4.9/5', label: 'Satisfaction', icon: '⭐' },
+              { value: 'Claude AI', label: 'Propulsé par Anthropic', icon: '✦' },
+              { value: 'HTML', label: 'Export standalone', icon: '📄' },
+              { value: '30+', label: 'Secteurs supportés', icon: '🏢' },
+              { value: '14j', label: 'Satisfait ou remboursé', icon: '🛡️' },
             ].map((s) => (
               <div key={s.label}>
                 <div className="text-2xl mb-1">{s.icon}</div>
@@ -335,8 +332,8 @@ export default function HomePage() {
               ✦ Ce que vous obtenez
             </div>
             <h2 className="font-syne font-bold text-ink mb-4" style={{ fontSize: 'clamp(28px, 4vw, 48px)' }}>
-              Un site complet en 60 secondes.<br />
-              <span className="gradient-text">Vraiment prêt à livrer.</span>
+              Une maquette complète générée.<br />
+              <span className="gradient-text">Prête à présenter.</span>
             </h2>
             <p className="text-muted max-w-xl mx-auto">
               Copywriting persuasif · Design adapté au secteur · Formulaire intelligent · SEO · Export HTML standalone
@@ -476,8 +473,8 @@ export default function HomePage() {
               Ils l&apos;utilisent déjà
             </div>
             <h2 className="font-syne font-bold text-ink mb-4" style={{ fontSize: 'clamp(28px, 4vw, 48px)' }}>
-              200+ freelances et agences<br />
-              <span className="gradient-text">nous font confiance.</span>
+              Freelances et agences<br />
+              <span className="gradient-text">qui l&apos;utilisent au quotidien.</span>
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
@@ -497,12 +494,6 @@ export default function HomePage() {
                 <p className="text-sm text-muted leading-relaxed flex-1 italic">
                   &ldquo;{t.content}&rdquo;
                 </p>
-
-                {/* Revenue badge */}
-                <div className={`inline-flex items-center gap-1.5 self-start px-3 py-1.5 rounded-full bg-gradient-to-r ${t.color} bg-opacity-10 text-xs font-bold text-ink`}>
-                  <TrendingUp className="w-3 h-3" />
-                  {t.revenue}
-                </div>
 
                 {/* Author */}
                 <div className="flex items-center gap-3 pt-3 border-t border-border">
@@ -539,12 +530,12 @@ export default function HomePage() {
               </div>
               <ul className="flex flex-col gap-3">
                 {[
-                  '2–3 jours de travail par maquette',
-                  'Client insatisfait du résultat générique',
-                  '150–200€ facturés en moyenne',
-                  'Templates copiés-collés sans âme',
+                  'Maquette Figma longue à préparer',
+                  'Résultat générique peu convaincant',
                   'Copywriting à rédiger soi-même',
-                  'Perte de prospects faute de demo rapide',
+                  'Templates copiés-collés sans adaptation',
+                  'Difficulté à faire visualiser le résultat final',
+                  'Perte de temps sur chaque avant-vente',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-muted">
                     <span className="text-red-400 mt-0.5 shrink-0">✕</span>
@@ -560,12 +551,12 @@ export default function HomePage() {
               </div>
               <ul className="flex flex-col gap-3">
                 {[
-                  '60 secondes pour une maquette complète',
-                  'Client impressionné dès le premier rendez-vous',
-                  '400–800€ facturés pour 1 min de travail',
-                  'Design unique adapté au secteur',
-                  'Copywriting persuasif généré par Claude AI',
-                  'Avant-vente visuelle qui ferme les deals',
+                  'Maquette HTML générée rapidement',
+                  'Design adapté au secteur et au style demandé',
+                  'Copywriting rédigé par Claude AI',
+                  'Client qui peut se projeter sur le rendu',
+                  'Export standalone hébergeable partout',
+                  'Démo structurée prête à envoyer au commerce',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-ink">
                     <span className="text-green mt-0.5 shrink-0">✓</span>
@@ -617,12 +608,12 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <div className="inline-block bg-accent/10 border border-accent/20 text-accent text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
-              🔥 Offre de lancement · Prix fondateurs
+              Offre de lancement · Prix fondateurs
             </div>
             <h2 className="font-syne font-bold text-ink mb-3" style={{ fontSize: 'clamp(28px, 4vw, 48px)' }}>
-              Rentabilisé dès le premier client
+              Tarifs simples et transparents
             </h2>
-            <p className="text-muted">1 abonnement Pro = 1 client facturé 500€ → ROI immédiat</p>
+            <p className="text-muted">Commencez avec 12 crédits offerts. Upgradez quand vous en avez besoin.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-5">
             {[
@@ -726,9 +717,9 @@ export default function HomePage() {
             Génère ton premier site<br />
             <span className="gradient-text">maintenant.</span>
           </h2>
-          <p className="text-muted mb-3 text-lg">Sans carte bancaire · Sans code · En 60 secondes</p>
+          <p className="text-muted mb-3 text-lg">Sans carte bancaire · Sans code · Résultats variables</p>
           <p className="text-sm text-muted mb-10">
-            Rejoins les 200+ freelances qui utilisent SitePilot pour closer leurs clients plus vite.
+            Les résultats dépendent de l&apos;offre, du client et de l&apos;exécution.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -748,16 +739,12 @@ export default function HomePage() {
           </div>
           <div className="flex items-center justify-center gap-6 mt-8 text-sm text-muted">
             <div className="flex items-center gap-1.5">
-              <Users className="w-4 h-4" />
-              200+ utilisateurs actifs
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-4 h-4" />
-              Résultat en 60 secondes
-            </div>
-            <div className="flex items-center gap-1.5">
               <Shield className="w-4 h-4" />
               14j satisfait ou remboursé
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Zap className="w-4 h-4" />
+              12 crédits offerts
             </div>
           </div>
         </div>

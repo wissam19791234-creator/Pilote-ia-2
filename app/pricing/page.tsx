@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import { Check, Shield, Zap } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import PricingCard from '@/components/PricingCard'
-import FormationCard from '@/components/FormationCard'
+import { cn } from '@/lib/utils'
 
 const PLANS = [
   {
@@ -13,32 +14,31 @@ const PLANS = [
     annualPrice: 15,
     description: 'Pour tester et démarrer',
     features: [
-      '5 sites générés/mois',
-      'Export HTML inclus',
-      'Message client DM',
-      'Templates de base (10 secteurs)',
+      '12 crédits par mois',
+      'Export HTML standalone',
+      'Message client généré',
+      '10+ secteurs supportés',
       'Support email',
-      '1 utilisateur',
     ],
-    cta: 'Commencer gratuitement',
+    cta: 'Commencer',
+    highlight: false,
   },
   {
     name: 'Pro',
     price: 39,
     annualPrice: 31,
-    description: 'Le plus populaire',
-    highlighted: true,
+    description: 'Pour un usage régulier',
     features: [
-      '20 sites générés/mois',
+      '20 crédits par mois',
       'Upload photos (8/site)',
       'Modifications par chat',
-      'Templates premium (30+ secteurs)',
-      'Automatisations IA',
+      '30+ secteurs supportés',
+      'Onglet automations IA',
       'Projets sauvegardés illimités',
       'Support prioritaire',
-      '1 utilisateur',
     ],
-    cta: 'Essayer Pro 14j offerts',
+    cta: 'Essayer 14 jours',
+    highlight: true,
   },
   {
     name: 'Agence',
@@ -46,133 +46,208 @@ const PLANS = [
     annualPrice: 63,
     description: 'Pour les équipes',
     features: [
-      '60 sites générés/mois',
-      'Workspace agence',
-      'Variantes de design (3/site)',
-      'Exports avancés (ZIP bientôt)',
+      '60 crédits par mois',
+      'Workspace partagé',
+      'Variantes de design (bientôt)',
+      'Export ZIP (bientôt)',
       'Priorité de génération',
       '3 utilisateurs',
       'Account manager',
     ],
-    cta: 'Contacter les ventes',
+    cta: 'Nous contacter',
+    highlight: false,
   },
 ]
 
-const FORMATIONS = [
+const FAQ = [
   {
-    title: 'Sites IA Local',
-    price: 97,
-    description: 'Créez et vendez des sites pour commerces locaux',
-    modules: ['12 modules', 'Accès à vie', 'Mises à jour incluses'],
-    badge: 'best-seller' as const,
+    q: "Qu'est-ce qu'un crédit ?",
+    a: "Un crédit correspond à une génération complète de site ou une modification par chat. Chaque appel à l'API Claude consomme un crédit.",
   },
   {
-    title: 'Automatisation IA',
-    price: 147,
-    description: 'Packagisez des systèmes d\'automatisation',
-    modules: ['10 modules', 'Accès à vie', 'Mises à jour incluses'],
+    q: 'Le plan Starter est-il suffisant pour démarrer ?',
+    a: 'Oui. 12 crédits permettent de générer et tester plusieurs maquettes avant de décider si vous souhaitez upgrader.',
   },
   {
-    title: 'E-commerce IA',
-    price: 197,
-    description: 'Créez des boutiques rentables avec l\'IA',
-    modules: ['13 modules', 'Accès à vie', 'Mises à jour incluses'],
-    badge: 'nouveau' as const,
+    q: 'Puis-je annuler à tout moment ?',
+    a: 'Oui, sans engagement. Vous pouvez annuler votre abonnement à tout moment depuis votre espace client.',
   },
   {
-    title: 'IA Business System',
-    price: 297,
-    originalPrice: 441,
-    description: 'Le bundle complet — tout inclus',
-    modules: ['3 formations', '1 mois Pro offert', '50+ prompts', 'Groupe privé'],
-    badge: 'best-seller' as const,
+    q: 'Les sites générés sont-ils prêts à héberger ?',
+    a: "Oui. Le fichier HTML généré est standalone — tous les styles sont inline. Il peut être hébergé sur n'importe quel serveur sans configuration.",
   },
 ]
 
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false)
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
       {/* Hero */}
-      <section className="py-20 px-6 text-center">
+      <section className="pt-28 pb-16 px-6 text-center">
         <h1 className="font-syne font-extrabold text-ink mb-4" style={{ fontSize: 'clamp(32px, 5vw, 56px)' }}>
-          Des tarifs simples et transparents
+          Tarifs simples et transparents
         </h1>
         <p className="text-muted max-w-xl mx-auto mb-8">
-          Commencez gratuitement avec 12 crédits offerts. Upgradez quand vous êtes prêt.
+          Commencez avec 12 crédits offerts, sans carte bancaire. Upgradez quand vous en avez besoin.
         </p>
 
-        {/* Toggle */}
-        <div className="inline-flex items-center gap-3 p-1.5 rounded-2xl bg-surface border border-border">
+        {/* Toggle annuel/mensuel */}
+        <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-card border border-border">
           <button
             onClick={() => setAnnual(false)}
-            className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${!annual ? 'bg-white shadow-card text-ink' : 'text-muted hover:text-ink'}`}
+            className={cn(
+              'px-5 py-2 rounded-lg text-sm font-semibold transition-all',
+              !annual ? 'bg-primary text-white shadow-glow-sm' : 'text-muted hover:text-ink',
+            )}
           >
             Mensuel
           </button>
           <button
             onClick={() => setAnnual(true)}
-            className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${annual ? 'bg-white shadow-card text-ink' : 'text-muted hover:text-ink'}`}
+            className={cn(
+              'px-5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2',
+              annual ? 'bg-primary text-white shadow-glow-sm' : 'text-muted hover:text-ink',
+            )}
           >
             Annuel
-            <span className="ml-2 text-[10px] bg-green/20 text-green px-1.5 py-0.5 rounded-full font-bold">-20%</span>
+            <span className="text-[10px] bg-green/20 text-green px-1.5 py-0.5 rounded-full font-bold">-20%</span>
           </button>
         </div>
       </section>
 
       {/* Plans */}
-      <section className="pb-24 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-6 items-start">
-            {PLANS.map((plan) => (
-              <PricingCard
+      <section className="pb-20 px-6">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-6 items-start">
+          {PLANS.map((plan) => {
+            const displayPrice = annual ? plan.annualPrice : plan.price
+            return (
+              <div
                 key={plan.name}
-                name={plan.name}
-                price={plan.price}
-                annualPrice={plan.annualPrice}
-                isAnnual={annual}
-                highlighted={plan.highlighted}
-                features={plan.features}
-                cta={plan.cta}
-                description={plan.description}
-              />
-            ))}
-          </div>
+                className={cn(
+                  'relative flex flex-col p-7 rounded-2xl border transition-all',
+                  plan.highlight
+                    ? 'bg-card border-primary/50 shadow-[0_0_40px_rgba(124,58,237,0.2)]'
+                    : 'bg-card border-border hover:border-primary/20',
+                )}
+              >
+                {plan.highlight && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                    <span className="text-xs font-bold gradient-bg text-white px-4 py-1 rounded-full shadow-primary">
+                      ✦ Populaire
+                    </span>
+                  </div>
+                )}
+
+                <div className="mb-2 mt-1">
+                  <h3 className="font-syne font-bold text-xl text-ink">{plan.name}</h3>
+                  <p className="text-xs text-muted mt-0.5">{plan.description}</p>
+                </div>
+
+                <div className="my-5">
+                  <div className="flex items-end gap-1">
+                    <span className="text-4xl font-bold font-syne text-ink">{displayPrice}€</span>
+                    <span className="text-muted text-sm mb-1">/mois</span>
+                  </div>
+                  {annual && (
+                    <p className="text-xs text-green mt-1">
+                      Économisez {Math.round((1 - plan.annualPrice / plan.price) * 100)}% vs mensuel
+                    </p>
+                  )}
+                </div>
+
+                <ul className="flex flex-col gap-2.5 flex-1 mb-7">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm">
+                      <Check className="w-4 h-4 text-green shrink-0 mt-0.5" />
+                      <span className="text-ink">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link
+                  href={plan.name === 'Agence' ? 'mailto:contact@sitepilot.ai' : '/studio'}
+                  className={cn(
+                    'flex items-center justify-center gap-2 py-3 rounded-xl font-syne font-bold text-sm transition-all',
+                    plan.highlight
+                      ? 'gradient-bg text-white shadow-primary hover:shadow-primary-hover hover:-translate-y-0.5'
+                      : 'bg-surface border border-border text-muted hover:text-ink hover:border-primary/30',
+                  )}
+                >
+                  {plan.cta}
+                </Link>
+              </div>
+            )
+          })}
         </div>
       </section>
 
       {/* Guarantee */}
-      <section className="py-12 px-6 bg-surface">
+      <section className="py-12 px-6 bg-surface/50 border-y border-border">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="text-4xl mb-4">🛡️</div>
-          <h2 className="font-syne font-bold text-ink text-2xl mb-3">Garantie 14 jours satisfait ou remboursé</h2>
-          <p className="text-muted">
-            Si SitePilot AI ne répond pas à vos attentes dans les 14 premiers jours, nous vous remboursons intégralement, sans question.
+          <Shield className="w-8 h-8 text-green mx-auto mb-3" />
+          <h2 className="font-syne font-bold text-ink text-xl mb-2">Remboursement sous 14 jours</h2>
+          <p className="text-muted text-sm">
+            Si SitePilot AI ne correspond pas à vos attentes dans les 14 premiers jours,
+            nous vous remboursons intégralement, sans condition.
           </p>
         </div>
       </section>
 
-      {/* Formations */}
-      <section className="py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="font-syne font-bold text-ink mb-3" style={{ fontSize: 'clamp(24px, 4vw, 42px)' }}>
-              Formations (accès à vie)
-            </h2>
-            <p className="text-muted">Investissement unique, compétences pour toujours.</p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-6">
-            {FORMATIONS.map((f) => (
-              <FormationCard key={f.title} {...f} compact />
+      {/* What's included */}
+      <section className="py-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="font-syne font-bold text-ink text-center mb-10 text-2xl">
+            Ce que vous obtenez avec chaque plan
+          </h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            {[
+              { icon: <Zap className="w-4 h-4 text-primary-light" />, title: 'Génération par Claude AI', desc: "Maquette HTML générée par Claude claude-sonnet-4-6 à partir d'une description texte." },
+              { icon: '📋', title: 'Copywriting adapté au secteur', desc: "Titre, accroche, services et CTA rédigés en fonction du secteur et de l'objectif." },
+              { icon: '🎨', title: 'Design system personnalisé', desc: 'Palette de couleurs et typographie adaptées au style du commerce.' },
+              { icon: '📱', title: 'HTML standalone responsive', desc: 'Fichier exportable, hébergeable sur n\'importe quel serveur sans dépendance.' },
+              { icon: '💌', title: 'Message client inclus', desc: 'DM Instagram et email rédigés pour présenter la maquette au commerce.' },
+              { icon: '🤖', title: 'Suggestions d\'automatisation', desc: "Options d'automatisation adaptées au secteur, présentées dans l'onglet Vendre." },
+            ].map((f) => (
+              <div key={f.title} className="flex gap-4 p-5 bg-card border border-border rounded-xl">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-base">
+                  {typeof f.icon === 'string' ? f.icon : f.icon}
+                </div>
+                <div>
+                  <p className="font-syne font-bold text-ink text-sm mb-1">{f.title}</p>
+                  <p className="text-xs text-muted leading-relaxed">{f.desc}</p>
+                </div>
+              </div>
             ))}
           </div>
-          <p className="text-center text-xs text-muted/70 mt-8 max-w-lg mx-auto">
-            Les résultats présentés sont des exemples individuels et ne constituent pas une garantie de résultats futurs.
-            Les performances varient selon les efforts, l&apos;expérience et le marché.
-          </p>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-16 px-6 bg-surface/40 border-t border-border">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="font-syne font-bold text-ink text-center mb-10 text-2xl">Questions fréquentes</h2>
+          <div className="flex flex-col gap-3">
+            {FAQ.map((item, i) => (
+              <div key={i} className="bg-card border border-border rounded-xl overflow-hidden">
+                <button
+                  className="w-full flex items-center justify-between px-5 py-4 text-left"
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                >
+                  <span className="font-semibold text-ink text-sm">{item.q}</span>
+                  <span className="text-muted text-lg ml-4 shrink-0">{openFaq === i ? '−' : '+'}</span>
+                </button>
+                {openFaq === i && (
+                  <div className="px-5 pb-4 text-sm text-muted leading-relaxed border-t border-border pt-3">
+                    {item.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

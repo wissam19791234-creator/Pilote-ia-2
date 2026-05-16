@@ -144,4 +144,4 @@ export interface ChatMessage {
   timestamp: string
 }
 
-export type StudioTab = 'preview' | 'plan' | 'files' | 'code' | 'export' | 'message' | 'automations'
+export type StudioTab = 'preview' | 'plan' | 'files' | 'code' | 'export' | 'message' | 'automations' | 'comparison'

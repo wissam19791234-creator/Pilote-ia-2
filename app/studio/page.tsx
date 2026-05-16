@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Sparkles, Eye, FileText, Code2, Download, MessageSquare, LayoutGrid, Zap, Bot } from 'lucide-react'
+import { Sparkles, Eye, FileText, Code2, Download, MessageSquare, LayoutGrid, Zap, Bot, GitCompareArrows } from 'lucide-react'
 import type { ChatMessage, GeneratedProject, StudioTab } from '@/types'
 import { getCredits, consumeCredit } from '@/lib/credits'
 import Sidebar from '@/components/Sidebar'
@@ -15,6 +15,7 @@ import CodePanel from '@/components/CodePanel'
 import ExportPanel from '@/components/ExportPanel'
 import ClientMessagePanel from '@/components/ClientMessagePanel'
 import AutomationSalesPanel from '@/components/AutomationSalesPanel'
+import ComparisonPanel from '@/components/ComparisonPanel'
 import PhotoUploader from '@/components/PhotoUploader'
 import { cn } from '@/lib/utils'
 
@@ -29,6 +30,7 @@ const TABS = [
   { id: 'preview' as const, label: 'Preview', icon: Eye },
   { id: 'plan' as const, label: 'Analyse', icon: LayoutGrid },
   { id: 'automations' as const, label: 'Vendre', icon: Bot },
+  { id: 'comparison' as const, label: 'Avant/Après', icon: GitCompareArrows },
   { id: 'files' as const, label: 'Fichiers', icon: FileText },
   { id: 'code' as const, label: 'Code', icon: Code2 },
   { id: 'export' as const, label: 'Export', icon: Download },
@@ -250,6 +252,11 @@ export default function StudioPage() {
           {activeTab === 'automations' && currentProject && (
             <div className="flex-1 overflow-hidden flex flex-col">
               <AutomationSalesPanel project={currentProject} />
+            </div>
+          )}
+          {activeTab === 'comparison' && currentProject && (
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <ComparisonPanel project={currentProject} />
             </div>
           )}
           {activeTab === 'files' && currentProject && (

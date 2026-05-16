@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  Sparkles, LayoutDashboard, FolderOpen, GraduationCap,
-  CreditCard, Settings, Plus, TrendingUp, Zap, ChevronRight,
+  Sparkles, LayoutDashboard, FolderOpen,
+  CreditCard, Plus, TrendingUp, Zap, ChevronRight, Bot, Map,
 } from 'lucide-react'
 import { getCredits } from '@/lib/credits'
 import { cn } from '@/lib/utils'
@@ -14,10 +14,8 @@ const navItems = [
   { href: '/studio', label: 'Studio', icon: Sparkles },
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/projects', label: 'Projets', icon: FolderOpen },
-  { href: '/formations', label: 'Formations', icon: GraduationCap },
-  { href: '/pricing', label: 'Pricing', icon: CreditCard },
-  { href: '/roadmap', label: 'Roadmap', icon: TrendingUp },
-  { href: '#', label: 'Paramètres', icon: Settings },
+  { href: '/pricing', label: 'Abonnement', icon: CreditCard },
+  { href: '/roadmap', label: 'Roadmap', icon: Map },
 ]
 
 export default function Sidebar() {
@@ -35,14 +33,14 @@ export default function Sidebar() {
   const creditColor = credits <= 1 ? '#ef4444' : credits <= 4 ? '#f59e0b' : '#10b981'
 
   return (
-    <aside className="w-[260px] shrink-0 h-screen sticky top-0 bg-[#0a0a14] border-r border-white/5 flex flex-col overflow-y-auto">
+    <aside className="w-[240px] shrink-0 h-screen sticky top-0 bg-[#0a0a14] border-r border-white/5 flex flex-col overflow-y-auto">
       {/* Logo */}
-      <div className="p-5 border-b border-white/5">
+      <div className="p-4 border-b border-white/5">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center shadow-glow-sm">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
-          <span className="font-syne font-bold text-lg gradient-text">SitePilot AI</span>
+          <span className="font-syne font-bold text-base gradient-text">SitePilot AI</span>
         </Link>
       </div>
 
@@ -108,21 +106,20 @@ export default function Sidebar() {
         </Link>
       </div>
 
-      {/* Formation upsell */}
-      <div className="mx-3 mb-4 p-4 bg-gradient-to-br from-violet/10 to-primary/10 rounded-2xl border border-primary/20">
-        <div className="flex items-center gap-1.5 mb-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-primary-light animate-pulse" />
-          <p className="text-xs font-bold text-primary-light">Bundle IA Business System</p>
+      {/* Studio shortcut */}
+      <div className="mx-3 mb-4 p-3 bg-primary/5 rounded-xl border border-primary/15">
+        <div className="flex items-center gap-2 mb-2">
+          <Bot className="w-3.5 h-3.5 text-primary-light" />
+          <p className="text-xs font-bold text-primary-light">Onglet Vendre</p>
         </div>
-        <div className="flex items-center gap-2 mb-2.5">
-          <span className="text-xl font-bold font-syne text-ink">197€</span>
-          <span className="text-sm text-muted line-through">297€</span>
-        </div>
+        <p className="text-[10px] text-muted leading-relaxed mb-2">
+          Après génération, consultez les automatisations et packs recommandés dans l&apos;onglet Vendre du Studio.
+        </p>
         <Link
-          href="/formations"
-          className="flex items-center justify-center w-full py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors"
+          href="/studio"
+          className="flex items-center justify-center w-full py-1.5 rounded-lg bg-primary/20 border border-primary/30 text-primary-light text-xs font-bold hover:bg-primary/30 transition-colors"
         >
-          Voir l&apos;offre →
+          Ouvrir le Studio →
         </Link>
       </div>
     </aside>

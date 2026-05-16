@@ -22,7 +22,6 @@ interface LoadingStepsProps {
 }
 
 export default function LoadingSteps({ currentStep, progress, mode }: LoadingStepsProps) {
-  const remaining = Math.max(0, Math.round((STEPS.length - currentStep) * 0.8))
   const isAI = mode === 'ai' || !mode
 
   return (
@@ -34,7 +33,7 @@ export default function LoadingSteps({ currentStep, progress, mode }: LoadingSte
             {isAI ? '✦ Claude AI génère votre site' : 'Génération en cours'}
           </p>
         </div>
-        <span className="text-xs text-muted">~{remaining}s</span>
+        <span className="text-xs text-muted">En cours…</span>
       </div>
 
       {/* Steps */}
