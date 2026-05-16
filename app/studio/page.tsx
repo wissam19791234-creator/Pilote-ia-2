@@ -7,7 +7,7 @@ import {
   ClipboardList, Video, ShieldCheck, ChevronLeft, Monitor,
 } from 'lucide-react'
 import type { ChatMessage, GeneratedProject, StudioTab } from '@/types'
-import { getCredits, consumeCredit } from '@/lib/credits'
+import { getCredits, consumeCredits, canAfford } from '@/lib/credits'
 import { analyzePrompt } from '@/lib/promptAnalyzer'
 import { generateLocalVisuals } from '@/lib/imageGeneration'
 import { generateSmartQuote } from '@/lib/quoteBuilder'
@@ -32,6 +32,7 @@ import SalesPackPanel from '@/components/SalesPackPanel'
 import QuoteBuilderPanel from '@/components/QuoteBuilderPanel'
 import QualityCheckPanel from '@/components/QualityCheckPanel'
 import VideoDemoPanel from '@/components/VideoDemoPanel'
+// TODO: import ChatbotPanel from '@/components/ChatbotPanel' — awaiting parallel agent
 import PhotoUploader from '@/components/PhotoUploader'
 import ErrorState from '@/components/ErrorState'
 import { cn } from '@/lib/utils'
@@ -43,6 +44,7 @@ const TABS: Array<{ id: StudioTab; label: string; icon: React.ElementType; group
   { id: 'automations', label: 'Vendre', icon: Bot },
   { id: 'offer', label: 'Offre', icon: Package },
   { id: 'quote', label: 'Devis', icon: ClipboardList },
+  { id: 'chatbot', label: 'Chatbot', icon: Bot },
   { id: 'video', label: 'Vidéo', icon: Video },
   { id: 'quality', label: 'Qualité', icon: ShieldCheck },
   { id: 'comparison', label: 'Avant/Après', icon: GitCompareArrows },
@@ -98,10 +100,11 @@ export default function StudioPage() {
   }, [setCredits])
 
   const runGeneration = useCallback(async (prompt: string, isRefine: boolean) => {
-    if (!consumeCredit()) {
-      addMessage('assistant', '❌ Plus de crédits disponibles. Upgradez votre plan pour continuer à générer des sites.')
+    if (!canAfford('generate_site')) {
+      addMessage('assistant', `❌ Crédits insuffisants. Cette action coûte 5 crédits. Il vous reste ${getCredits()} crédits.\n\n[Voir les plans →](/pricing)`)
       return
     }
+    consumeCredits(5, 'generate_site')
 
     setIsGenerating(true)
     setError(null)
@@ -289,6 +292,11 @@ export default function StudioPage() {
           isGenerating={isGenerating}
           photoCount={photos.length + videos.length}
         />
+        {/* Credit cost note */}
+        <div className="px-4 py-1.5 border-t border-border bg-surface-soft flex items-center gap-1.5">
+          <Zap className="w-3 h-3 text-amber-500 shrink-0" />
+          <p className="text-[10px] text-muted">Chaque génération coûte <strong className="text-ink">5 crédits</strong> · {credits} crédit{credits !== 1 ? 's' : ''} restant{credits !== 1 ? 's' : ''}</p>
+        </div>
 
         {/* Mobile: "Voir le site" button — shown only after generation */}
         {currentProject && !isGenerating && (
@@ -380,6 +388,16 @@ export default function StudioPage() {
           {activeTab === 'quote' && currentProject && (
             <div className="flex-1 overflow-hidden flex flex-col">
               <QuoteBuilderPanel project={currentProject} />
+            </div>
+          )}
+          {activeTab === 'chatbot' && currentProject && (
+            <div className="flex-1 overflow-hidden flex flex-col">
+              {/* TODO: <ChatbotPanel project={currentProject} /> — awaiting parallel agent */}
+              <div className="flex-1 flex items-center justify-center flex-col gap-3 text-muted p-8 text-center">
+                <Bot className="w-10 h-10 text-primary/30" />
+                <p className="font-syne font-bold text-ink">Chatbot IA</p>
+                <p className="text-sm max-w-xs">Le module Chatbot est en cours d&apos;initialisation. Revenez dans quelques instants.</p>
+              </div>
             </div>
           )}
           {activeTab === 'video' && currentProject && (

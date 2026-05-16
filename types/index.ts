@@ -282,6 +282,21 @@ export interface ChatMessage {
   timestamp: string
 }
 
+export interface ChatbotConfig {
+  enabled: boolean
+  level: 'none' | 'simple' | 'advanced'
+  title: string
+  welcomeMessage: string
+  suggestedQuestions: string[]
+  answers: Array<{ trigger: string; response: string }>
+  leadCaptureFields: string[]
+  ctaLabel: string
+  whatsappMessage: string
+  leadScoringEnabled: boolean
+  crmEnabled: boolean
+  primaryColor: string
+}
+
 export type StudioTab =
   | 'preview'
   | 'plan'
@@ -289,6 +304,7 @@ export type StudioTab =
   | 'automations'
   | 'offer'
   | 'quote'
+  | 'chatbot'
   | 'video'
   | 'quality'
   | 'comparison'
