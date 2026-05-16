@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   Sparkles, LayoutDashboard, FolderOpen,
-  CreditCard, Plus, TrendingUp, Zap, ChevronRight, Bot, Map,
+  CreditCard, Plus, TrendingUp, Zap, ChevronRight, Bot, Map, Settings,
 } from 'lucide-react'
 import { getCredits } from '@/lib/credits'
 import { cn } from '@/lib/utils'
@@ -16,6 +16,7 @@ const navItems = [
   { href: '/projects', label: 'Projets', icon: FolderOpen },
   { href: '/pricing', label: 'Abonnement', icon: CreditCard },
   { href: '/roadmap', label: 'Roadmap', icon: Map },
+  { href: '/settings', label: 'Paramètres', icon: Settings },
 ]
 
 export default function Sidebar() {
