@@ -1,10 +1,10 @@
 'use client'
 
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Sparkles, Eye, FileText, Code2, Download, MessageSquare,
   LayoutGrid, Zap, Bot, GitCompareArrows, Image, Package,
-  ClipboardList, Video, ShieldCheck,
+  ClipboardList, Video, ShieldCheck, ChevronLeft, Monitor,
 } from 'lucide-react'
 import type { ChatMessage, GeneratedProject, StudioTab } from '@/types'
 import { getCredits, consumeCredit } from '@/lib/credits'
@@ -163,6 +163,7 @@ export default function StudioPage() {
 
       addMessage('assistant', msg)
       setActiveTab('preview')
+      setMobileView('studio')
     } catch (err) {
       clearInterval(interval)
       const message = err instanceof Error ? err.message : 'Erreur inconnue'
@@ -183,6 +184,8 @@ export default function StudioPage() {
     void runGeneration(prompt, isMod)
   }, [addMessage, currentProject, runGeneration])
 
+  const [mobileView, setMobileView] = useState<'chat' | 'studio'>('chat')
+
   const noProject = !currentProject
   const progress = generationJob?.progress ?? 0
   const step = generationJob ? Math.round((generationJob.progress / 100) * 10) : 0
@@ -195,7 +198,10 @@ export default function StudioPage() {
       </div>
 
       {/* Chat column */}
-      <div className="w-full lg:w-[360px] shrink-0 flex flex-col border-r border-border bg-[#09090f]">
+      <div className={cn(
+        'w-full lg:w-[360px] shrink-0 flex flex-col border-r border-border bg-[#09090f]',
+        mobileView === 'studio' ? 'hidden lg:flex' : 'flex',
+      )}>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-[#0a0a14]">
           <div className="flex items-center gap-2.5">
@@ -242,10 +248,37 @@ export default function StudioPage() {
           isGenerating={isGenerating}
           photoCount={photos.length}
         />
+
+        {/* Mobile: "Voir le site" button — shown only after generation */}
+        {currentProject && !isGenerating && (
+          <button
+            onClick={() => setMobileView('studio')}
+            className="lg:hidden flex items-center justify-center gap-2 mx-4 mb-3 py-3 rounded-xl gradient-bg text-white text-sm font-semibold shadow-glow-sm"
+          >
+            <Monitor className="w-4 h-4" />
+            Voir le site généré →
+          </button>
+        )}
       </div>
 
       {/* Main area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className={cn(
+        'flex-1 flex flex-col overflow-hidden',
+        mobileView === 'chat' ? 'hidden lg:flex' : 'flex',
+      )}>
+        {/* Mobile back button */}
+        <div className="lg:hidden flex items-center gap-2 px-3 py-2 border-b border-border bg-[#0a0a14]">
+          <button
+            onClick={() => setMobileView('chat')}
+            className="flex items-center gap-1 text-muted hover:text-ink text-sm transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Chat
+          </button>
+          {currentProject && (
+            <span className="text-xs text-muted ml-2 truncate">{currentProject.businessName} — {currentProject.city}</span>
+          )}
+        </div>
         {/* Tabs */}
         <div className="flex items-center gap-0.5 px-2 py-2 border-b border-border bg-[#0a0a14] overflow-x-auto">
           {TABS.map((tab) => {
