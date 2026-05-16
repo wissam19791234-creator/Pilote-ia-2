@@ -1,9 +1,20 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { Sparkles, Eye, FileText, Code2, Download, MessageSquare, LayoutGrid, Zap, Bot, GitCompareArrows } from 'lucide-react'
+import { useCallback, useEffect } from 'react'
+import {
+  Sparkles, Eye, FileText, Code2, Download, MessageSquare,
+  LayoutGrid, Zap, Bot, GitCompareArrows, Image, Package,
+  ClipboardList, Video, ShieldCheck,
+} from 'lucide-react'
 import type { ChatMessage, GeneratedProject, StudioTab } from '@/types'
 import { getCredits, consumeCredit } from '@/lib/credits'
+import { analyzePrompt } from '@/lib/promptAnalyzer'
+import { generateLocalVisuals } from '@/lib/imageGeneration'
+import { generateSmartQuote } from '@/lib/quoteBuilder'
+import { generateSalesPack } from '@/lib/salesPackBuilder'
+import { runQualityCheck } from '@/lib/qualityChecker'
+import { generateAutomationSales } from '@/lib/automationOptions'
+import { useStudioStore } from '@/store/studioStore'
 import Sidebar from '@/components/Sidebar'
 import ChatPanel from '@/components/ChatPanel'
 import PromptComposer from '@/components/PromptComposer'
@@ -16,28 +27,30 @@ import ExportPanel from '@/components/ExportPanel'
 import ClientMessagePanel from '@/components/ClientMessagePanel'
 import AutomationSalesPanel from '@/components/AutomationSalesPanel'
 import ComparisonPanel from '@/components/ComparisonPanel'
+import ImageGalleryPreview from '@/components/ImageGalleryPreview'
+import SalesPackPanel from '@/components/SalesPackPanel'
+import QuoteBuilderPanel from '@/components/QuoteBuilderPanel'
+import QualityCheckPanel from '@/components/QualityCheckPanel'
+import VideoDemoPanel from '@/components/VideoDemoPanel'
 import PhotoUploader from '@/components/PhotoUploader'
+import ErrorState from '@/components/ErrorState'
 import { cn } from '@/lib/utils'
 
-const WELCOME: ChatMessage = {
-  id: 'welcome',
-  role: 'assistant',
-  content: `Bonjour ! Je suis SitePilot AI, propulsé par Claude ✦\n\nDécris le commerce pour lequel tu veux créer un site — ville, secteur, style, objectif… Plus tu es précis, meilleur sera le résultat.\n\nJ'analyse ton brief, génère le copywriting, le design et le HTML en quelques secondes.`,
-  timestamp: new Date().toISOString(),
-}
-
-const TABS = [
-  { id: 'preview' as const, label: 'Preview', icon: Eye },
-  { id: 'plan' as const, label: 'Analyse', icon: LayoutGrid },
-  { id: 'automations' as const, label: 'Vendre', icon: Bot },
-  { id: 'comparison' as const, label: 'Avant/Après', icon: GitCompareArrows },
-  { id: 'files' as const, label: 'Fichiers', icon: FileText },
-  { id: 'code' as const, label: 'Code', icon: Code2 },
-  { id: 'export' as const, label: 'Export', icon: Download },
-  { id: 'message' as const, label: 'Message', icon: MessageSquare },
+const TABS: Array<{ id: StudioTab; label: string; icon: React.ElementType; group?: string }> = [
+  { id: 'preview', label: 'Preview', icon: Eye },
+  { id: 'plan', label: 'Analyse', icon: LayoutGrid },
+  { id: 'images', label: 'Visuels', icon: Image },
+  { id: 'automations', label: 'Vendre', icon: Bot },
+  { id: 'offer', label: 'Offre', icon: Package },
+  { id: 'quote', label: 'Devis', icon: ClipboardList },
+  { id: 'video', label: 'Vidéo', icon: Video },
+  { id: 'quality', label: 'Qualité', icon: ShieldCheck },
+  { id: 'comparison', label: 'Avant/Après', icon: GitCompareArrows },
+  { id: 'files', label: 'Fichiers', icon: FileText },
+  { id: 'code', label: 'Code', icon: Code2 },
+  { id: 'export', label: 'Export', icon: Download },
+  { id: 'message', label: 'Message', icon: MessageSquare },
 ]
-
-const TOTAL_STEPS = 11
 
 const MODIFICATION_TRIGGERS = [
   'plus luxe', 'plus premium', 'plus coloré', 'plus vendeur', 'plus sombre',
@@ -52,49 +65,60 @@ function isModification(text: string, hasProject: boolean): boolean {
   return MODIFICATION_TRIGGERS.some((kw) => lower.includes(kw))
 }
 
-function newMsg(role: ChatMessage['role'], content: string): ChatMessage {
-  return { id: `msg_${Date.now()}_${Math.random()}`, role, content, timestamp: new Date().toISOString() }
+function enrichProject(project: GeneratedProject): GeneratedProject {
+  const enriched = { ...project }
+  if (!enriched.visuals) enriched.visuals = generateLocalVisuals(project)
+  if (!enriched.smartQuote) enriched.smartQuote = generateSmartQuote(project)
+  if (!enriched.salesPack) enriched.salesPack = generateSalesPack(project)
+  if (!enriched.qualityCheck) enriched.qualityCheck = runQualityCheck(project)
+  if (!enriched.automationSales) {
+    enriched.automationSales = generateAutomationSales(project.sector, project.businessName, project.city, project.goal)
+  }
+  return enriched
 }
 
 export default function StudioPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([WELCOME])
-  const [currentProject, setCurrentProject] = useState<GeneratedProject | null>(null)
-  const [photos, setPhotos] = useState<string[]>([])
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [generationStep, setGenerationStep] = useState(0)
-  const [generationProgress, setGenerationProgress] = useState(0)
-  const [generationMode, setGenerationMode] = useState<string>('')
-  const [activeTab, setActiveTab] = useState<StudioTab>('preview')
-  const [credits, setCredits] = useState(12)
-  const [selectedFile, setSelectedFile] = useState('index.html')
-  const [showPhotos, setShowPhotos] = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const {
+    messages, photos, isGenerating, generationJob,
+    currentProject, activeTab, selectedFile, showPhotos,
+    credits, error,
+    addMessage, addPhoto, removePhoto, setShowPhotos,
+    setIsGenerating, setGenerationJob,
+    setCurrentProject, setActiveTab, setSelectedFile,
+    setCredits, setError, resetStudio,
+  } = useStudioStore()
 
   useEffect(() => {
     setCredits(getCredits())
-  }, [])
-
-  const addMsg = useCallback((role: ChatMessage['role'], content: string) => {
-    setMessages((prev) => [...prev, newMsg(role, content)])
-  }, [])
+  }, [setCredits])
 
   const runGeneration = useCallback(async (prompt: string, isRefine: boolean) => {
     if (!consumeCredit()) {
-      addMsg('assistant', '❌ Plus de crédits disponibles. Upgradez votre plan pour continuer à générer des sites.')
+      addMessage('assistant', '❌ Plus de crédits disponibles. Upgradez votre plan pour continuer à générer des sites.')
       return
     }
 
     setIsGenerating(true)
-    setGenerationStep(0)
-    setGenerationProgress(0)
-    setGenerationMode('')
+    setError(null)
 
-    // Animate steps in parallel with API call
+    // Analyze prompt locally for immediate feedback
+    const analysis = analyzePrompt(prompt)
+    addMessage('assistant', `🔍 Secteur détecté : **${analysis.sector}** · ${analysis.city}\n${analysis.missingInfo.length > 0 ? `💡 Tip : ${analysis.missingInfo.join(', ')} pour un meilleur résultat.` : ''}`)
+
     let step = 0
-    intervalRef.current = setInterval(() => {
-      step = Math.min(step + 1, TOTAL_STEPS - 1)
-      setGenerationStep(step)
-      setGenerationProgress(Math.round((step / TOTAL_STEPS) * 85))
+    const totalSteps = 11
+    const interval = setInterval(() => {
+      step = Math.min(step + 1, totalSteps - 1)
+      setGenerationJob({
+        id: 'current',
+        status: 'building_site',
+        progress: Math.round((step / totalSteps) * 85),
+        estimatedSeconds: 0,
+        currentStep: '',
+        steps: [],
+        logs: [],
+        startedAt: new Date().toISOString(),
+      })
     }, 900)
 
     try {
@@ -109,51 +133,51 @@ export default function StudioPage() {
         body: JSON.stringify(body),
       })
 
+      clearInterval(interval)
+
       if (!res.ok) {
         const err = await res.json() as { error?: string }
         throw new Error(err.error ?? `Erreur ${res.status}`)
       }
 
       const data = await res.json() as { project: GeneratedProject; mode?: string }
+      const enriched = enrichProject(data.project)
 
-      if (intervalRef.current) clearInterval(intervalRef.current)
-      setGenerationStep(TOTAL_STEPS)
-      setGenerationProgress(100)
-      setGenerationMode(data.mode ?? 'local')
-
-      setCurrentProject(data.project)
+      setGenerationJob({ id: 'current', status: 'completed', progress: 100, estimatedSeconds: 0, currentStep: '', steps: [], logs: [], startedAt: new Date().toISOString(), completedAt: new Date().toISOString() })
+      setCurrentProject(enriched)
       setCredits(getCredits())
       window.dispatchEvent(new Event('credits-updated'))
 
-      const modeLabel = data.mode === 'ai' ? '✦ Claude AI' : data.mode === 'local-fallback' ? '(mode local)' : '(mode local)'
+      const modeLabel = data.mode === 'ai' ? '✦ Claude AI' : '(mode local)'
       const msg = isRefine
         ? `✅ Modifications appliquées ${modeLabel}\n\nLe site a été mis à jour selon vos instructions.`
-        : `✅ Site généré ${modeLabel} !\n\n🏢 **${data.project.businessName}** — ${data.project.city}\n🎯 Secteur : ${data.project.sector}\n📋 ${data.project.sections.length} sections générées\n${data.project.automationNeeds.length > 0 ? `🤖 Automations : ${data.project.automationNeeds.join(', ')}\n` : ''}💌 Message client prêt\n\nModifiez le site en tapant vos instructions ici.`
+        : `✅ Site généré ${modeLabel} !\n\n🏢 **${enriched.businessName}** — ${enriched.city}\n🎯 Secteur : ${enriched.sector}\n📋 ${enriched.sections.length} sections · ${enriched.visuals?.length ?? 0} visuels\n🤖 ${enriched.automationSales?.options.length ?? 0} automatisations\n📊 Qualité : ${enriched.qualityCheck?.score ?? '?'}/100\n\nExplorez les onglets : Visuels, Vendre, Offre, Devis, Vidéo, Qualité.`
 
-      addMsg('assistant', msg)
+      addMessage('assistant', msg)
       setActiveTab('preview')
     } catch (err) {
-      if (intervalRef.current) clearInterval(intervalRef.current)
+      clearInterval(interval)
       const message = err instanceof Error ? err.message : 'Erreur inconnue'
-      addMsg('assistant', `❌ Erreur lors de la génération : ${message}\n\nRéessayez ou simplifiez votre description.`)
+      setError(message)
+      addMessage('assistant', `❌ Erreur lors de la génération : ${message}\n\nRéessayez ou simplifiez votre description.`)
     } finally {
       setIsGenerating(false)
     }
-  }, [currentProject, photos, addMsg])
+  }, [currentProject, photos, addMessage, setIsGenerating, setGenerationJob, setCurrentProject, setCredits, setActiveTab, setError])
 
   const handleGenerate = useCallback((prompt: string) => {
-    addMsg('user', prompt)
+    addMessage('user', prompt)
     const isMod = isModification(prompt, !!currentProject)
-    addMsg('assistant', isMod
+    addMessage('assistant', isMod
       ? '🔄 Modification en cours…\nJ\'applique vos instructions avec Claude AI.'
       : '🚀 Génération en cours…\nClaude AI analyse votre brief et crée votre site.',
     )
     void runGeneration(prompt, isMod)
-  }, [addMsg, currentProject, runGeneration])
-
-  useEffect(() => () => { if (intervalRef.current) clearInterval(intervalRef.current) }, [])
+  }, [addMessage, currentProject, runGeneration])
 
   const noProject = !currentProject
+  const progress = generationJob?.progress ?? 0
+  const step = generationJob ? Math.round((generationJob.progress / 100) * 10) : 0
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -187,11 +211,7 @@ export default function StudioPage() {
         </div>
 
         {isGenerating ? (
-          <LoadingSteps
-            currentStep={generationStep}
-            progress={generationProgress}
-            mode={generationMode}
-          />
+          <LoadingSteps currentStep={step} progress={progress} mode={generationJob?.status === 'completed' ? 'ai' : ''} />
         ) : (
           <ChatPanel messages={messages} />
         )}
@@ -199,7 +219,12 @@ export default function StudioPage() {
         {/* Photo uploader */}
         {showPhotos && (
           <div className="px-4 pb-3 border-t border-border pt-3 bg-[#09090f]">
-            <PhotoUploader photos={photos} onChange={setPhotos} />
+            <PhotoUploader photos={photos} onChange={(newPhotos) => {
+              // sync store photos
+              const store = useStudioStore.getState()
+              store.clearPhotos()
+              newPhotos.forEach((p) => store.addPhoto(p))
+            }} />
           </div>
         )}
 
@@ -214,7 +239,7 @@ export default function StudioPage() {
       {/* Main area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Tabs */}
-        <div className="flex items-center gap-1 px-3 py-2 border-b border-border bg-[#0a0a14] overflow-x-auto">
+        <div className="flex items-center gap-0.5 px-2 py-2 border-b border-border bg-[#0a0a14] overflow-x-auto">
           {TABS.map((tab) => {
             const disabled = noProject && tab.id !== 'preview'
             const Icon = tab.icon
@@ -224,7 +249,7 @@ export default function StudioPage() {
                 onClick={() => !disabled && setActiveTab(tab.id)}
                 disabled={disabled}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap',
+                  'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0',
                   activeTab === tab.id
                     ? 'bg-primary/15 text-primary-light border border-primary/20'
                     : disabled
@@ -241,7 +266,15 @@ export default function StudioPage() {
 
         {/* Tab content */}
         <div className="flex-1 overflow-hidden flex flex-col bg-surface">
-          {activeTab === 'preview' && (
+          {error && activeTab === 'preview' && !currentProject && (
+            <ErrorState message={error} onRetry={() => {
+              setError(null)
+              const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user')
+              if (lastUserMsg) handleGenerate(lastUserMsg.content)
+            }} />
+          )}
+
+          {activeTab === 'preview' && !error && (
             <SitePreview html={currentProject?.html ?? null} isGenerating={isGenerating} />
           )}
           {activeTab === 'plan' && currentProject && (
@@ -249,9 +282,38 @@ export default function StudioPage() {
               <PlanPanel project={currentProject} />
             </div>
           )}
+          {activeTab === 'images' && currentProject && (
+            <ImageGalleryPreview project={currentProject} />
+          )}
           {activeTab === 'automations' && currentProject && (
             <div className="flex-1 overflow-hidden flex flex-col">
               <AutomationSalesPanel project={currentProject} />
+            </div>
+          )}
+          {activeTab === 'offer' && currentProject && (
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <SalesPackPanel project={currentProject} />
+            </div>
+          )}
+          {activeTab === 'quote' && currentProject && (
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <QuoteBuilderPanel project={currentProject} />
+            </div>
+          )}
+          {activeTab === 'video' && currentProject && (
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <VideoDemoPanel project={currentProject} />
+            </div>
+          )}
+          {activeTab === 'quality' && currentProject && (
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <QualityCheckPanel
+                project={currentProject}
+                onRegenerate={() => {
+                  const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user')
+                  if (lastUserMsg) handleGenerate(lastUserMsg.content)
+                }}
+              />
             </div>
           )}
           {activeTab === 'comparison' && currentProject && (
