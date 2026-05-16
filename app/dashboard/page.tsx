@@ -5,32 +5,15 @@ import { Zap, Globe, Download, CreditCard, TrendingUp } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import DashboardCard from '@/components/DashboardCard'
 import ProjectCard from '@/components/ProjectCard'
-import FormationCard from '@/components/FormationCard'
 import { getProjects, deleteProject } from '@/lib/storage'
 import { getCredits } from '@/lib/credits'
 import type { GeneratedProject } from '@/types'
 import Link from 'next/link'
 
 const ROADMAP = [
-  { status: '🔄', label: 'Vraie IA OpenAI', date: 'Q3 2025' },
   { status: '🔄', label: 'Authentification Supabase', date: 'Q3 2025' },
   { status: '📅', label: 'Export ZIP', date: 'Q4 2025' },
-]
-
-const FORMATIONS = [
-  {
-    title: 'Sites IA Local',
-    price: 97,
-    description: 'Créez et vendez des sites',
-    modules: ['12 modules', 'Accès à vie'],
-    badge: 'best-seller' as const,
-  },
-  {
-    title: 'Automatisation IA',
-    price: 147,
-    description: 'Automatisez et vendez',
-    modules: ['10 modules', 'Accès à vie'],
-  },
+  { status: '📅', label: 'Variantes de design (3/site)', date: 'Q4 2025' },
 ]
 
 function MockProject(index: number): GeneratedProject {
@@ -134,7 +117,7 @@ export default function DashboardPage() {
           <section className="mb-10">
             <div className="flex items-center justify-between mb-5">
               <h2 className="font-syne font-bold text-xl text-ink">Projets récents</h2>
-              <Link href="/projects" className="text-sm text-orange hover:underline font-medium">
+              <Link href="/projects" className="text-sm text-primary-light hover:underline font-medium">
                 Voir tout →
               </Link>
             </div>
@@ -145,30 +128,15 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Formations */}
-          <section className="mb-10">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="font-syne font-bold text-xl text-ink">Formations recommandées</h2>
-              <Link href="/formations" className="text-sm text-orange hover:underline font-medium">
-                Voir tout →
-              </Link>
-            </div>
-            <div className="grid md:grid-cols-2 gap-5">
-              {FORMATIONS.map((f) => (
-                <FormationCard key={f.title} {...f} compact />
-              ))}
-            </div>
-          </section>
-
           {/* Roadmap */}
           <section>
             <h2 className="font-syne font-bold text-xl text-ink mb-5">
-              <TrendingUp className="w-5 h-5 inline-block mr-2 text-orange" />
+              <TrendingUp className="w-5 h-5 inline-block mr-2 text-primary-light" />
               Prochaines fonctionnalités
             </h2>
             <div className="flex flex-col gap-3">
               {ROADMAP.map((item) => (
-                <div key={item.label} className="flex items-center gap-4 p-4 bg-white border border-border rounded-xl">
+                <div key={item.label} className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl">
                   <span className="text-xl">{item.status}</span>
                   <span className="flex-1 font-medium text-ink">{item.label}</span>
                   <span className="text-xs text-muted bg-surface px-3 py-1 rounded-full">{item.date}</span>

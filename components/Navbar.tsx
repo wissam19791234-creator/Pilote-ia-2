@@ -11,7 +11,6 @@ const navLinks = [
   { href: '/studio', label: 'Studio' },
   { href: '/projects', label: 'Projets' },
   { href: '/pricing', label: 'Pricing' },
-  { href: '/formations', label: 'Formations' },
   { href: '/dashboard', label: 'Dashboard' },
 ]
 

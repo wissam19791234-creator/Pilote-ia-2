@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { refineProject } from '@/lib/generator'
+import { refineProject, generateHTMLSite } from '@/lib/generator'
 import type { GeneratedProject } from '@/types'
 
 function sanitizeInput(input: unknown, max: number): string {
@@ -92,7 +92,6 @@ Retourne UNIQUEMENT le JSON des modifications, rien d'autre.`
         refinedBase.automationNeeds = aiMods.automationNeeds as string[]
       }
 
-      const { generateHTMLSite } = require('@/lib/generator')
       refinedBase.html = generateHTMLSite(refinedBase, photos)
 
       return NextResponse.json({ project: refinedBase, mode: 'ai' })

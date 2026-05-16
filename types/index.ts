@@ -46,6 +46,138 @@ export interface GeneratedSection {
   content: string
 }
 
+export interface GeneratedVisual {
+  id: string
+  type: 'hero' | 'gallery' | 'product' | 'background' | 'icon'
+  title: string
+  prompt: string
+  cssPlaceholder: string
+  alt: string
+}
+
+export interface QuoteField {
+  id: string
+  label: string
+  type: 'text' | 'select' | 'number' | 'date' | 'textarea' | 'file'
+  options?: string[]
+  required: boolean
+  placeholder?: string
+}
+
+export interface SmartQuote {
+  sector: string
+  formTitle: string
+  formSubtitle: string
+  fields: QuoteField[]
+  adminSummaryTemplate: string
+  clientConfirmationTemplate: string
+  estimatedResponseTime: string
+}
+
+export interface ObjectionAnswer {
+  objection: string
+  responseShort: string
+  responsePremium: string
+  valueArgument: string
+}
+
+export interface SalesPack {
+  recommendedOffer: string
+  simplePack: CommercialPackV2
+  premiumPack: CommercialPackV2
+  automationPack: CommercialPackV2
+  priceJustification: string[]
+  objectionHandling: ObjectionAnswer[]
+  pitchScript: string
+  dmShort: string
+  dmPremium: string
+  emailProfessional: string
+  followUps: string[]
+  depositMessage: string
+}
+
+export interface CommercialPackV2 {
+  name: string
+  tagline: string
+  price: string
+  priceHigh: string
+  features: string[]
+  highlighted: boolean
+}
+
+export interface QualityIssue {
+  id: string
+  severity: 'warning' | 'error' | 'info'
+  message: string
+  fix?: string
+}
+
+export interface QualityCheck {
+  score: number
+  passed: boolean
+  issues: QualityIssue[]
+  suggestions: string[]
+  checkedAt: string
+}
+
+export type GenerationStatus =
+  | 'idle'
+  | 'queued'
+  | 'analyzing'
+  | 'planning'
+  | 'designing'
+  | 'writing'
+  | 'generating_images'
+  | 'building_site'
+  | 'building_automations'
+  | 'building_sales_pack'
+  | 'generating_video'
+  | 'exporting'
+  | 'quality_check'
+  | 'completed'
+  | 'error'
+
+export interface GenerationStep {
+  id: string
+  title: string
+  description: string
+  status: 'waiting' | 'running' | 'done' | 'error'
+  durationMs: number
+  startedAt?: string
+  completedAt?: string
+}
+
+export interface GenerationJob {
+  id: string
+  status: GenerationStatus
+  progress: number
+  estimatedSeconds: number
+  currentStep: string
+  steps: GenerationStep[]
+  logs: string[]
+  startedAt: string
+  completedAt?: string
+  error?: string
+}
+
+export interface PromptAnalysis {
+  businessName: string
+  sector: string
+  city: string
+  style: string
+  goal: string
+  targetAudience: string
+  services: string[]
+  products: string[]
+  needsEcommerce: boolean
+  needsBooking: boolean
+  needsQuote: boolean
+  needsWhatsapp: boolean
+  needsAutomation: boolean
+  confidenceScore: number
+  missingInfo: string[]
+}
+
 export interface GeneratedProject {
   id: string
   projectName: string
@@ -82,13 +214,65 @@ export interface GeneratedProject {
   files: GeneratedFile[]
   html: string
   photos: string[]
-  automationSalesOptions?: AutomationSalesOption[]
-  recommendedPacks?: RecommendedPack[]
-  automationArgumentary?: string[]
-  automationPriceScript?: string
-  automationReadyMessage?: string
   createdAt: string
   status: 'draft' | 'generated' | 'exported'
+  // Extended fields
+  automationSales?: AutomationSalesData
+  visuals?: GeneratedVisual[]
+  smartQuote?: SmartQuote
+  salesPack?: SalesPack
+  qualityCheck?: QualityCheck
+  promptAnalysis?: PromptAnalysis
+}
+
+export interface AutomationOptionDetails {
+  formQuestions?: string[]
+  whatsappMessage?: string
+  whatsappExample?: string
+  emailPro?: string
+  emailChalleureux?: string
+  followupJ1?: string
+  followupJ3?: string
+  followupJ7?: string
+  scoreFields?: string[]
+  crmColumns?: string[]
+  dashboardMetrics?: string[]
+  bookingInfo?: string
+  paymentInfo?: string
+}
+
+export interface AutomationOption {
+  id: string
+  name: string
+  category: string
+  problem: string
+  benefit: string
+  complexity: 'simple' | 'moyenne' | 'avancée'
+  perceivedValue: 'faible' | 'forte' | 'premium'
+  salesPitch: string
+  recommended: boolean
+  price: string
+  details: AutomationOptionDetails
+}
+
+export interface CommercialPack {
+  id: string
+  name: string
+  tagline: string
+  price: string
+  priceHigh: string
+  features: string[]
+  automationIds: string[]
+  highlighted: boolean
+  color: string
+}
+
+export interface AutomationSalesData {
+  options: AutomationOption[]
+  packs: CommercialPack[]
+  clientArgument: string
+  priceScript: string
+  readyMessage: string
 }
 
 export interface ChatMessage {
@@ -98,23 +282,17 @@ export interface ChatMessage {
   timestamp: string
 }
 
-export interface AutomationSalesOption {
-  key: string
-  name: string
-  problemSolved: string
-  businessBenefit: string
-  complexity: 'simple' | 'moyenne' | 'avancée'
-  perceivedValue: 'faible' | 'forte' | 'premium'
-  salesPitch: string
-  recommended: boolean
-  details: string[]
-}
-
-export interface RecommendedPack {
-  id: 'pack-1' | 'pack-2' | 'pack-3'
-  name: string
-  includes: string[]
-  positioning: string
-}
-
-export type StudioTab = 'preview' | 'plan' | 'files' | 'code' | 'export' | 'message' | 'automations'
+export type StudioTab =
+  | 'preview'
+  | 'plan'
+  | 'images'
+  | 'automations'
+  | 'offer'
+  | 'quote'
+  | 'video'
+  | 'quality'
+  | 'comparison'
+  | 'files'
+  | 'code'
+  | 'export'
+  | 'message'

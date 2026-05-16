@@ -145,13 +145,13 @@ export default function SitePreview({ html, isGenerating }: SitePreviewProps) {
               srcDoc={html}
               title="Aperçu du site généré"
               className="w-full border-none block"
-              style={{ height: '900px' }}
+              style={{ height: '3200px' }}
               sandbox="allow-scripts allow-same-origin"
               onLoad={() => setLoaded(true)}
             />
           )}
           {!loaded && (
-            <div className="w-full h-[900px] shimmer" />
+            <div className="w-full h-[3200px] shimmer" />
           )}
         </div>
       </div>

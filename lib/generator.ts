@@ -7,7 +7,7 @@ import type {
   Testimonial,
   GeneratedFile,
 } from '@/types'
-import { buildAutomationSalesModule } from '@/lib/automationOptions'
+import { generateAutomationSales } from '@/lib/automationOptions'
 
 // ─── Sector detection ────────────────────────────────────────────────────────
 
@@ -290,23 +290,6 @@ export function generateHTMLSite(project: GeneratedProject, photos: string[]): s
     </div>
   </section>` : ''
 
-  const salesAutomationOptions = project.automationSalesOptions ?? []
-  const salesAutomationSection = salesAutomationOptions.length > 0 ? `
-  <section style="padding:80px 5%;background:${isDark ? '#0f0f14' : '#f7f8ff'};">
-    <div style="max-width:1100px;margin:0 auto;">
-      <h2 style="font-family:${headingFont};font-size:clamp(28px,4vw,42px);color:${palette.text};text-align:center;margin-bottom:18px;">Automatisations à vendre</h2>
-      <p style="text-align:center;color:${palette.muted};max-width:700px;margin:0 auto 36px;">Options commerciales prêtes pour générer plus de demandes qualifiées.</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;">
-        ${salesAutomationOptions.filter((o) => o.recommended).slice(0, 6).map((o) => `
-        <div style="background:${isDark ? '#1a1a1f' : '#fff'};border:1px solid ${palette.primary}33;border-radius:14px;padding:18px;">
-          <div style="font-weight:700;color:${palette.text};margin-bottom:6px;">${o.name}</div>
-          <p style="color:${palette.muted};font-size:0.9rem;margin-bottom:8px;">${o.businessBenefit}</p>
-          <p style="color:${palette.primary};font-size:0.85rem;">${o.salesPitch}</p>
-        </div>`).join('')}
-      </div>
-    </div>
-  </section>` : ''
-
   const ecommerceSection = ecommerceNeeds.length > 0 ? `
   <section style="padding:80px 5%;background:${isDark ? '#0a0a0a' : '#fffaf3'};">
     <div style="max-width:1100px;margin:0 auto;">
@@ -485,23 +468,6 @@ export function generateHTMLSite(project: GeneratedProject, photos: string[]): s
 </section>
 
 ${automationSection}
-
-${project.automationSalesOptions?.length ? `
-<section style="padding:80px 5%;background:${isDark ? '#0f0f14' : '#f7f8ff'};">
-  <div style="max-width:1100px;margin:0 auto;">
-    <h2 style="font-family:${headingFont};font-size:clamp(24px,4vw,40px);color:${palette.text};text-align:center;margin-bottom:12px;">Automatisations à vendre</h2>
-    <p style="text-align:center;color:${palette.muted};max-width:700px;margin:0 auto 36px;">Options recommandées pour gagner du temps et convertir plus de prospects.</p>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;">
-      ${project.automationSalesOptions.filter((o) => o.recommended).slice(0, 6).map((o) => `
-      <div style="background:${isDark ? '#1a1a1f' : 'white'};border:1px solid ${palette.primary}33;border-radius:14px;padding:18px;">
-        <div style="font-weight:700;color:${palette.text};margin-bottom:6px;">${o.name}</div>
-        <p style="color:${palette.muted};font-size:0.9rem;margin-bottom:8px;">${o.businessBenefit}</p>
-        <p style="color:${palette.primary};font-size:0.85rem;">${o.salesPitch}</p>
-      </div>`).join('')}
-    </div>
-  </div>
-</section>` : ''}
-
 ${ecommerceSection}
 
 <!-- GALERIE -->
@@ -606,7 +572,7 @@ ${ecommerceSection}
         </div>
       </div>
     </div>
-    <div style="border-top:1px solid #ffffff11;padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:gap;gap:12px;">
+    <div style="border-top:1px solid #ffffff11;padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
       <p style="color:#6b7280;font-size:0.85rem;">© ${new Date().getFullYear()} ${businessName}. Tous droits réservés.</p>
       <div style="display:flex;gap:24px;">
         <a href="#" style="color:#6b7280;font-size:0.85rem;transition:color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">Mentions légales</a>
@@ -641,20 +607,22 @@ ${automationNeeds.includes('WhatsApp Business') ? `<a href="https://wa.me/336000
     setTimeout(function() { document.getElementById('form-success').style.display = 'none'; }, 5000);
   }
 
-  // Intersection observer for animations
+  // Scroll animations (skip first visible section)
   const observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
         entry.target.style.opacity = '1';
         entry.target.style.transform = 'translateY(0)';
+        observer.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.1 });
+  }, { threshold: 0.08 });
 
-  document.querySelectorAll('section').forEach(function(el) {
+  document.querySelectorAll('section').forEach(function(el, i) {
+    if (i === 0) return;
     el.style.opacity = '0';
-    el.style.transform = 'translateY(20px)';
-    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    el.style.transform = 'translateY(30px)';
+    el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
     observer.observe(el);
   });
 </script>
@@ -706,7 +674,7 @@ export function generateProject(prompt: string, photos: string[]): GeneratedProj
 
   const projectId = `proj_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
-  const baseProject = {
+  const project: GeneratedProject = {
     id: projectId,
     projectName: `Site ${businessName} — ${city}`,
     businessName,
@@ -725,12 +693,6 @@ export function generateProject(prompt: string, photos: string[]): GeneratedProj
     designSystem,
     pages,
     sections,
-  }
-
-  const automationModule = buildAutomationSalesModule(baseProject)
-
-  const project: GeneratedProject = {
-    ...baseProject,
     seo: {
       title: `${businessName} — Expert ${sector} à ${city}`,
       description: `${businessName}, votre expert ${sector} à ${city}. ${copywritingBase.heroSubtitle.slice(0, 120)}...`,
@@ -748,11 +710,6 @@ export function generateProject(prompt: string, photos: string[]): GeneratedProj
     files: [],
     html: '',
     photos,
-    automationSalesOptions: automationModule.options,
-    recommendedPacks: automationModule.recommendedPacks,
-    automationArgumentary: automationModule.clientArgumentary,
-    automationPriceScript: automationModule.priceScript,
-    automationReadyMessage: automationModule.readyToSendMessage,
     createdAt: new Date().toISOString(),
     status: 'draft',
   }
@@ -775,6 +732,7 @@ export function generateProject(prompt: string, photos: string[]): GeneratedProj
     },
   ]
 
+  project.automationSales = generateAutomationSales(sector, businessName, city, goal)
   project.status = 'generated'
   return project
 }
