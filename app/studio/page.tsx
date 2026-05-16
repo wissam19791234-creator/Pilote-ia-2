@@ -67,13 +67,15 @@ function isModification(text: string, hasProject: boolean): boolean {
 
 function enrichProject(project: GeneratedProject): GeneratedProject {
   const enriched = { ...project }
-  if (!enriched.visuals) enriched.visuals = generateLocalVisuals(project)
-  if (!enriched.smartQuote) enriched.smartQuote = generateSmartQuote(project)
-  if (!enriched.salesPack) enriched.salesPack = generateSalesPack(project)
-  if (!enriched.qualityCheck) enriched.qualityCheck = runQualityCheck(project)
-  if (!enriched.automationSales) {
-    enriched.automationSales = generateAutomationSales(project.sector, project.businessName, project.city, project.goal)
-  }
+  try { if (!enriched.visuals) enriched.visuals = generateLocalVisuals(project) } catch (e) { console.warn('[enrich] visuals', e) }
+  try { if (!enriched.smartQuote) enriched.smartQuote = generateSmartQuote(project) } catch (e) { console.warn('[enrich] quote', e) }
+  try { if (!enriched.salesPack) enriched.salesPack = generateSalesPack(project) } catch (e) { console.warn('[enrich] sales', e) }
+  try { if (!enriched.qualityCheck) enriched.qualityCheck = runQualityCheck(project) } catch (e) { console.warn('[enrich] quality', e) }
+  try {
+    if (!enriched.automationSales) {
+      enriched.automationSales = generateAutomationSales(project.sector, project.businessName, project.city, project.goal)
+    }
+  } catch (e) { console.warn('[enrich] automations', e) }
   return enriched
 }
 
@@ -141,7 +143,13 @@ export default function StudioPage() {
       }
 
       const data = await res.json() as { project: GeneratedProject; mode?: string }
-      const enriched = enrichProject(data.project)
+      let enriched: GeneratedProject
+      try {
+        enriched = enrichProject(data.project)
+      } catch (e) {
+        console.warn('[studio] enrichProject failed, using raw project', e)
+        enriched = data.project
+      }
 
       setGenerationJob({ id: 'current', status: 'completed', progress: 100, estimatedSeconds: 0, currentStep: '', steps: [], logs: [], startedAt: new Date().toISOString(), completedAt: new Date().toISOString() })
       setCurrentProject(enriched)

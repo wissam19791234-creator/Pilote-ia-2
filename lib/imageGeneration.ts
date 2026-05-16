@@ -1,5 +1,9 @@
 import type { GeneratedProject, GeneratedVisual } from '@/types'
-import { nanoid } from 'nanoid'
+
+function uid(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID().slice(0, 8)
+  return Math.random().toString(36).slice(2, 10)
+}
 
 interface PlaceholderStyle {
   gradient: string
@@ -90,7 +94,7 @@ export function generateVisualPlan(project: GeneratedProject): GeneratedVisual[]
 
   const visuals: GeneratedVisual[] = [
     {
-      id: nanoid(8),
+      id: uid(),
       type: 'hero',
       title: `Hero — ${project.businessName}`,
       prompt: `Professional ${sector} hero image for ${project.businessName}, ${project.style} style, ${project.city}`,
@@ -98,7 +102,7 @@ export function generateVisualPlan(project: GeneratedProject): GeneratedVisual[]
       alt: `${project.businessName} — hero`,
     },
     ...galleryStyles.map((style, i) => ({
-      id: nanoid(8),
+      id: uid(),
       type: 'gallery' as const,
       title: style.label,
       prompt: `${style.label} photo for ${project.sector} business, professional, ${project.style}`,
@@ -112,7 +116,7 @@ export function generateVisualPlan(project: GeneratedProject): GeneratedVisual[]
     const products = project.products.slice(0, 3)
     products.forEach((product, i) => {
       visuals.push({
-        id: nanoid(8),
+        id: uid(),
         type: 'product',
         title: product,
         prompt: `Product photo of ${product} for ${sector} brand, white/beige background, professional`,
