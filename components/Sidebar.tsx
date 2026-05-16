@@ -33,9 +33,9 @@ export default function Sidebar() {
   const creditColor = credits <= 1 ? '#ef4444' : credits <= 4 ? '#f59e0b' : '#10b981'
 
   return (
-    <aside className="w-[240px] shrink-0 h-screen sticky top-0 bg-[#0a0a14] border-r border-white/5 flex flex-col overflow-y-auto">
+    <aside className="w-[240px] shrink-0 h-screen sticky top-0 bg-white border-r border-border flex flex-col overflow-y-auto shadow-soft">
       {/* Logo */}
-      <div className="p-4 border-b border-white/5">
+      <div className="p-4 border-b border-border">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center shadow-glow-sm">
             <Sparkles className="w-4 h-4 text-white" />
@@ -67,13 +67,13 @@ export default function Sidebar() {
               className={cn(
                 'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
                 active
-                  ? 'bg-primary/15 text-primary-light border border-primary/20'
-                  : 'text-muted hover:bg-white/5 hover:text-ink',
+                  ? 'bg-primary/10 text-primary border border-primary/20'
+                  : 'text-muted hover:bg-surface-soft hover:text-ink',
               )}
             >
-              <Icon className={cn('w-4 h-4 shrink-0', active && 'text-primary-light')} />
+              <Icon className={cn('w-4 h-4 shrink-0', active && 'text-primary')} />
               {item.label}
-              {active && <ChevronRight className="w-3 h-3 ml-auto text-primary-light opacity-60" />}
+              {active && <ChevronRight className="w-3 h-3 ml-auto text-primary opacity-60" />}
             </Link>
           )
         })}

@@ -107,21 +107,22 @@ export default function StudioPage() {
     const analysis = analyzePrompt(prompt)
     addMessage('assistant', `🔍 Secteur détecté : **${analysis.sector}** · ${analysis.city}\n${analysis.missingInfo.length > 0 ? `💡 Tip : ${analysis.missingInfo.join(', ')} pour un meilleur résultat.` : ''}`)
 
-    let step = 0
-    const totalSteps = 11
-    const interval = setInterval(() => {
-      step = Math.min(step + 1, totalSteps - 1)
-      setGenerationJob({
-        id: 'current',
-        status: 'building_site',
-        progress: Math.round((step / totalSteps) * 85),
-        estimatedSeconds: 0,
-        currentStep: '',
-        steps: [],
-        logs: [],
-        startedAt: new Date().toISOString(),
-      })
-    }, 900)
+    // Estimate duration based on complexity
+    const hasEcommerce = /e.commerce|boutique|shopify|vente en ligne/i.test(prompt)
+    const hasVideo = /vidéo|video/i.test(prompt)
+    const hasAuto = /auto|crm|whatsapp|devis auto/i.test(prompt)
+    const estimatedSecs = hasEcommerce ? 210 : hasVideo ? 200 : hasAuto ? 180 : isRefine ? 120 : 150
+
+    setGenerationJob({
+      id: 'current',
+      status: 'building_site',
+      progress: 5,
+      estimatedSeconds: estimatedSecs,
+      currentStep: 'Analyse en cours',
+      steps: [],
+      logs: [],
+      startedAt: new Date().toISOString(),
+    })
 
     try {
       const endpoint = isRefine ? '/api/refine' : '/api/generate'
@@ -134,8 +135,6 @@ export default function StudioPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-
-      clearInterval(interval)
 
       if (!res.ok) {
         const err = await res.json() as { error?: string }
@@ -165,7 +164,6 @@ export default function StudioPage() {
       setActiveTab('preview')
       setMobileView('studio')
     } catch (err) {
-      clearInterval(interval)
       const message = err instanceof Error ? err.message : 'Erreur inconnue'
       setError(message)
       addMessage('assistant', `❌ Erreur lors de la génération : ${message}\n\nRéessayez ou simplifiez votre description.`)
@@ -199,11 +197,11 @@ export default function StudioPage() {
 
       {/* Chat column */}
       <div className={cn(
-        'w-full lg:w-[360px] shrink-0 flex flex-col border-r border-border bg-[#09090f]',
+        'w-full lg:w-[360px] shrink-0 flex flex-col border-r border-border bg-white',
         mobileView === 'studio' ? 'hidden lg:flex' : 'flex',
       )}>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-[#0a0a14]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-soft">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center shadow-glow-sm">
               <Sparkles className="w-4 h-4 text-white" />
@@ -225,16 +223,45 @@ export default function StudioPage() {
         </div>
 
         {isGenerating ? (
-          <LoadingSteps currentStep={step} progress={progress} mode={generationJob?.status === 'completed' ? 'ai' : ''} />
+          <LoadingSteps
+            currentStep={step}
+            progress={progress}
+            mode={generationJob?.status === 'completed' ? 'ai' : ''}
+            estimatedSeconds={generationJob?.estimatedSeconds ?? 150}
+          />
         ) : (
           <ChatPanel messages={messages} />
         )}
 
+        {/* Quick action buttons — shown after generation */}
+        {currentProject && !isGenerating && (
+          <div className="px-3 py-2 border-t border-border bg-surface-soft">
+            <p className="text-[10px] text-muted mb-2 font-semibold uppercase tracking-wider">Actions rapides</p>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { label: '✨ Plus luxe', prompt: 'Rends le site plus luxe et premium' },
+                { label: '🎨 Plus coloré', prompt: 'Rends le site plus coloré et dynamique' },
+                { label: '⬜ Plus minimaliste', prompt: 'Rends le site plus minimaliste et épuré' },
+                { label: '🤖 Ajouter devis auto', prompt: 'Ajoute un système de devis automatique intelligent' },
+                { label: '💬 Ajouter WhatsApp', prompt: 'Ajoute un bouton WhatsApp Business bien visible' },
+                { label: '🛒 Ajouter e-commerce', prompt: 'Ajoute une section boutique e-commerce avec produits' },
+              ].map(({ label, prompt }) => (
+                <button
+                  key={label}
+                  onClick={() => handleGenerate(prompt)}
+                  className="text-[10px] px-2.5 py-1.5 rounded-lg bg-white border border-border text-muted hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all font-medium"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Photo uploader */}
         {showPhotos && (
-          <div className="px-4 pb-3 border-t border-border pt-3 bg-[#09090f]">
+          <div className="px-4 pb-3 border-t border-border pt-3 bg-white">
             <PhotoUploader photos={photos} onChange={(newPhotos) => {
-              // sync store photos
               const store = useStudioStore.getState()
               store.clearPhotos()
               newPhotos.forEach((p) => store.addPhoto(p))
@@ -267,7 +294,7 @@ export default function StudioPage() {
         mobileView === 'chat' ? 'hidden lg:flex' : 'flex',
       )}>
         {/* Mobile back button */}
-        <div className="lg:hidden flex items-center gap-2 px-3 py-2 border-b border-border bg-[#0a0a14]">
+        <div className="lg:hidden flex items-center gap-2 px-3 py-2 border-b border-border bg-surface-soft">
           <button
             onClick={() => setMobileView('chat')}
             className="flex items-center gap-1 text-muted hover:text-ink text-sm transition-colors"
@@ -280,7 +307,7 @@ export default function StudioPage() {
           )}
         </div>
         {/* Tabs */}
-        <div className="flex items-center gap-0.5 px-2 py-2 border-b border-border bg-[#0a0a14] overflow-x-auto">
+        <div className="flex items-center gap-0.5 px-2 py-2 border-b border-border bg-white overflow-x-auto">
           {TABS.map((tab) => {
             const disabled = noProject && tab.id !== 'preview'
             const Icon = tab.icon
@@ -292,10 +319,10 @@ export default function StudioPage() {
                 className={cn(
                   'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0',
                   activeTab === tab.id
-                    ? 'bg-primary/15 text-primary-light border border-primary/20'
+                    ? 'bg-primary/10 text-primary border border-primary/20'
                     : disabled
-                    ? 'text-muted/25 cursor-not-allowed'
-                    : 'text-muted hover:text-ink hover:bg-white/5',
+                    ? 'text-muted/30 cursor-not-allowed'
+                    : 'text-muted hover:text-ink hover:bg-surface-soft',
                 )}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -306,7 +333,7 @@ export default function StudioPage() {
         </div>
 
         {/* Tab content */}
-        <div className="flex-1 overflow-hidden flex flex-col bg-surface">
+        <div className="flex-1 overflow-hidden flex flex-col bg-background">
           {error && activeTab === 'preview' && !currentProject && (
             <ErrorState message={error} onRetry={() => {
               setError(null)

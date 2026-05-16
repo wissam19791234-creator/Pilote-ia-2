@@ -3,6 +3,8 @@ import { Zap, Sparkles, ArrowRight, Check, Star, Shield } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import FAQ from '@/components/FAQ'
+import RoiCalculator from '@/components/RoiCalculator'
+import ComparisonSection from '@/components/ComparisonSection'
 
 const FAQ_ITEMS = [
   { question: 'SitePilot AI utilise quelle IA ?', answer: 'SitePilot AI est propulsé par Claude (Anthropic), l\'un des modèles de langage les plus avancés au monde. Il génère copywriting, architecture UX et HTML complet en une seule passe, adapté au secteur détecté.' },
@@ -463,6 +465,27 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ═══════════════════════ ROI CALCULATOR ═══════════════════════ */}
+      <section className="py-24 px-6 bg-[#fffaf3]">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-block bg-violet-100 text-violet-700 text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+              Simulateur de rentabilité
+            </div>
+            <h2 className="font-syne font-bold text-[#171717] mb-4" style={{ fontSize: 'clamp(28px, 4vw, 48px)' }}>
+              Combien peut vous rapporter<br />
+              <span style={{ background: 'linear-gradient(135deg, #8b5cf6, #4f46e5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                SitePilot ?
+              </span>
+            </h2>
+            <p className="text-[#6b625b] max-w-xl mx-auto">
+              Entrez vos paramètres et estimez votre retour sur investissement potentiel.
+            </p>
+          </div>
+          <RoiCalculator />
+        </div>
+      </section>
+
       {/* ═══════════════════════ TESTIMONIALS ═══════════════════════ */}
       <section className="py-24 px-6 bg-background relative overflow-hidden">
         <div className="orb w-[400px] h-[400px] bg-accent/10 bottom-0 left-0" />
@@ -602,6 +625,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <ComparisonSection />
 
       {/* ═══════════════════════ PRICING ═══════════════════════ */}
       <section className="py-24 px-6 bg-surface/50">
