@@ -81,14 +81,17 @@ function enrichProject(project: GeneratedProject): GeneratedProject {
 
 export default function StudioPage() {
   const {
-    messages, photos, isGenerating, generationJob,
+    messages, photos, videos, isGenerating, generationJob,
     currentProject, activeTab, selectedFile, showPhotos,
     credits, error,
     addMessage, addPhoto, removePhoto, setShowPhotos,
+    addVideo, removeVideo, clearVideos,
     setIsGenerating, setGenerationJob,
     setCurrentProject, setActiveTab, setSelectedFile,
     setCredits, setError, resetStudio,
   } = useStudioStore()
+
+  const [videoFrames, setVideoFrames] = useState<string[]>([])
 
   useEffect(() => {
     setCredits(getCredits())
@@ -126,9 +129,11 @@ export default function StudioPage() {
 
     try {
       const endpoint = isRefine ? '/api/refine' : '/api/generate'
+      // For vision analysis: include real photos + extracted video frames (images only)
+      const photosForApi = [...photos, ...videoFrames]
       const body = isRefine && currentProject
-        ? { instruction: prompt, project: currentProject, photos }
-        : { prompt, photos }
+        ? { instruction: prompt, project: currentProject, photos: photosForApi }
+        : { prompt, photos: photosForApi, videos }
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -170,7 +175,7 @@ export default function StudioPage() {
     } finally {
       setIsGenerating(false)
     }
-  }, [currentProject, photos, addMessage, setIsGenerating, setGenerationJob, setCurrentProject, setCredits, setActiveTab, setError])
+  }, [currentProject, photos, videos, videoFrames, addMessage, setIsGenerating, setGenerationJob, setCurrentProject, setCredits, setActiveTab, setError])
 
   const handleGenerate = useCallback((prompt: string) => {
     addMessage('user', prompt)
@@ -258,14 +263,23 @@ export default function StudioPage() {
           </div>
         )}
 
-        {/* Photo uploader */}
+        {/* Photo & video uploader */}
         {showPhotos && (
           <div className="px-4 pb-3 border-t border-border pt-3 bg-white">
-            <PhotoUploader photos={photos} onChange={(newPhotos) => {
-              const store = useStudioStore.getState()
-              store.clearPhotos()
-              newPhotos.forEach((p) => store.addPhoto(p))
-            }} />
+            <PhotoUploader
+              photos={photos}
+              onChange={(newPhotos) => {
+                const store = useStudioStore.getState()
+                store.clearPhotos()
+                newPhotos.forEach((p) => store.addPhoto(p))
+              }}
+              videos={videos}
+              onVideosChange={(newVideos) => {
+                clearVideos()
+                newVideos.forEach((v) => addVideo(v))
+              }}
+              onVideoFrames={(frames) => setVideoFrames(frames)}
+            />
           </div>
         )}
 
@@ -273,7 +287,7 @@ export default function StudioPage() {
           onGenerate={handleGenerate}
           onPhotoClick={() => setShowPhotos(!showPhotos)}
           isGenerating={isGenerating}
-          photoCount={photos.length}
+          photoCount={photos.length + videos.length}
         />
 
         {/* Mobile: "Voir le site" button — shown only after generation */}

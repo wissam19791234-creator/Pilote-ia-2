@@ -1039,7 +1039,30 @@ function buildAppLanding(preset: DAPreset, project: GeneratedProject, photos: st
 
 // ─── Main HTML generator ──────────────────────────────────────────────────────
 
-export function generateHTMLSite(project: GeneratedProject, photos: string[]): string {
+function buildVideoSection(videos: string[], preset: DAPreset, businessName: string): string {
+  if (videos.length === 0) return ''
+  const { palette, typography } = preset
+  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+  return `
+<section style="padding:80px 5%;background:${isDark ? '#111118' : palette.surface};">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:40px;" class="animate-on-scroll">
+      <span class="badge">En vidéo</span>
+      <h2 class="section-title" style="margin-top:16px;">${businessName} en action</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:${videos.length > 1 ? 'repeat(auto-fit,minmax(300px,1fr))' : '1fr'};gap:24px;max-width:${videos.length === 1 ? '860px' : '100%'};margin:0 auto;">
+      ${videos.map((v, i) => `
+      <div class="animate-on-scroll delay-${i+1}" style="border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
+        <video controls muted playsinline style="width:100%;display:block;background:#000;" preload="metadata">
+          <source src="${v}">
+        </video>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`
+}
+
+export function generateHTMLSite(project: GeneratedProject, photos: string[], videos: string[] = []): string {
   const { designSystem, copywriting, seo, sector, businessName, city, services, automationNeeds, ecommerceNeeds } = project
 
   // Pick the DA preset based on sector + style
@@ -1147,6 +1170,8 @@ export function generateHTMLSite(project: GeneratedProject, photos: string[]): s
 ${buildHeader(preset, businessName, copywriting.ctaPrimary, services)}
 
 ${heroSection}
+
+${buildVideoSection(videos, preset, businessName)}
 
 ${problemSection}
 

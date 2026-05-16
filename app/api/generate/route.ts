@@ -5,8 +5,63 @@ import type { GeneratedProject } from '@/types'
 
 const SYSTEM_PROMPT = `Tu es un expert en copywriting et création de sites web pour commerces locaux français. Tu génères du contenu persuasif, authentique et adapté au secteur. Tu réponds UNIQUEMENT en JSON valide, sans markdown, sans explication.`
 
-function buildUserPrompt(prompt: string): string {
-  return `Description du commerce : "${prompt}"
+async function analyzeVisuals(client: Anthropic, photos: string[], prompt: string): Promise<string> {
+  if (photos.length === 0) return ''
+
+  // Build vision message content — only real images, max 4
+  const imageContent = photos.slice(0, 4).map((photo) => {
+    const match = photo.match(/^data:(image\/[^;]+);base64,(.+)$/)
+    if (!match) return null
+    return {
+      type: 'image' as const,
+      source: {
+        type: 'base64' as const,
+        media_type: match[1] as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
+        data: match[2],
+      },
+    }
+  }).filter((x): x is NonNullable<typeof x> => x !== null)
+
+  if (imageContent.length === 0) return ''
+
+  try {
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 800,
+      messages: [{
+        role: 'user',
+        content: [
+          ...imageContent,
+          {
+            type: 'text',
+            text: `Analyse ces images pour un site web professionnel. Contexte client: "${prompt}"\n\nDécris en français: 1) Le type de commerce visible, 2) L'ambiance/style (couleurs dominantes, atmosphère), 3) Les éléments spécifiques visibles (plats, équipements, décoration, produits...), 4) Le niveau de gamme apparent. Réponse courte, 4-6 phrases max.`,
+          },
+        ],
+      }],
+    })
+    const content = response.content[0]
+    return content.type === 'text' ? content.text : ''
+  } catch (e) {
+    console.warn('[vision] analysis failed:', e)
+    return ''
+  }
+}
+
+function buildUserPrompt(prompt: string, photoAnalysis: string): string {
+  const visualContext = photoAnalysis
+    ? `\n\nANALYSE VISUELLE DES PHOTOS/VIDÉOS UPLOADÉES:\n${photoAnalysis}\n\nIntègre ces informations visuelles dans le contenu généré.`
+    : ''
+
+  return `Description EXACTE du client : "${prompt}"${visualContext}
+
+INSTRUCTIONS CRITIQUES:
+- Lis CHAQUE détail de la description et respecte-le à la lettre
+- Si le client mentionne une ville → utilise exactement cette ville
+- Si le client mentionne un style (luxe, coloré, minimaliste) → applique-le
+- Si le client mentionne des services spécifiques → inclus-les dans la liste services
+- Si le client mentionne des fonctionnalités (WhatsApp, devis auto, réservation) → reflète-les dans goal et automationNeeds
+- Si le client mentionne des couleurs → note-les dans le style
+- Génère un businessName RÉALISTE et adapté au secteur (pas générique)
 
 Génère un objet JSON avec ce contenu pour un site web professionnel :
 {
@@ -76,8 +131,15 @@ export async function POST(request: Request) {
     }
 
     const prompt = sanitizeInput(body.prompt)
+
+    // Only accept base64 images for Claude Vision
     const photos = Array.isArray(body.photos)
       ? (body.photos as string[]).slice(0, 8).filter((p) => typeof p === 'string' && p.startsWith('data:image/'))
+      : []
+
+    // Accept videos (base64 data URLs), max 3
+    const videos = Array.isArray(body.videos)
+      ? (body.videos as string[]).slice(0, 3).filter((v) => typeof v === 'string' && v.startsWith('data:video/'))
       : []
 
     const apiKey = process.env.ANTHROPIC_API_KEY
@@ -91,13 +153,16 @@ export async function POST(request: Request) {
     // Call Claude
     const client = new Anthropic({ apiKey })
 
+    // Run visual analysis if photos (or video frames) are provided
+    const photoAnalysis = await analyzeVisuals(client, photos, prompt)
+
     let aiData: Record<string, unknown>
     try {
       const message = await client.messages.create({
         model: 'claude-sonnet-4-6',
         max_tokens: 4096,
         system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: buildUserPrompt(prompt) }],
+        messages: [{ role: 'user', content: buildUserPrompt(prompt, photoAnalysis) }],
       })
 
       const content = message.content[0]
@@ -114,7 +179,7 @@ export async function POST(request: Request) {
 
     // Merge AI data with local generator
     const baseProject = generateProject(prompt, photos)
-    const project = mergeAIData(baseProject, aiData, photos)
+    const project = mergeAIData(baseProject, aiData, photos, videos)
 
     return NextResponse.json({ project, mode: 'ai' })
   } catch (err) {
@@ -136,7 +201,7 @@ function getStringArray(obj: Record<string, unknown>, key: string, fallback: str
   return strings.length > 0 ? strings : fallback
 }
 
-function mergeAIData(base: GeneratedProject, ai: Record<string, unknown>, photos: string[]): GeneratedProject {
+function mergeAIData(base: GeneratedProject, ai: Record<string, unknown>, photos: string[], videos: string[]): GeneratedProject {
   const merged = {
     ...base,
     businessName: getString(ai, 'businessName', base.businessName),
@@ -171,8 +236,8 @@ function mergeAIData(base: GeneratedProject, ai: Record<string, unknown>, photos
     },
   }
 
-  // Regenerate HTML with AI content
-  merged.html = generateHTMLSite(merged, photos)
+  // Regenerate HTML with AI content and videos
+  merged.html = generateHTMLSite(merged, photos, videos)
   merged.copywriting.clientMessage = generateClientMessage(merged)
   merged.status = 'generated'
 
