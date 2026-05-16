@@ -564,20 +564,143 @@ function buildStatsRow(preset: DAPreset): string {
 </div>`
 }
 
-function buildGallerySection(preset: DAPreset, photos: string[]): string {
-  const { palette, typography } = preset
-  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
-  const items = photos.length > 1
-    ? photos.slice(1, 5).map((p, i) => `<div style="border-radius:14px;overflow:hidden;aspect-ratio:1;"><img src="${p}" alt="Photo ${i + 2}" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform=''"></div>`)
-    : ['#ece8e2','#e5e0d8','#f0ebe4','#e8e3dc'].map((c, i) => `<div style="background:${c};border-radius:14px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:#ccc;">📸</div>`)
+// ─── Sector-specific CSS visual placeholders (look like real photos) ──────────
+
+const SECTOR_VISUALS: Record<string, { hero: string; gallery: string[] }> = {
+  restaurant: {
+    hero: `background:linear-gradient(135deg,#1a0800 0%,#5c1a00 40%,#c0553a 70%,#e07832 100%);display:flex;align-items:center;justify-content:center;`,
+    gallery: [
+      `background:linear-gradient(160deg,#fdf6ec,#f5deb3,#d4a45a);`,
+      `background:linear-gradient(160deg,#fff8ee,#fce0a8,#e8a030);`,
+      `background:linear-gradient(160deg,#fdf6ec,#e8c88a,#c0553a);`,
+      `background:linear-gradient(160deg,#fff4e6,#f7d794,#d4840a);`,
+    ],
+  },
+  beauté: {
+    hero: `background:linear-gradient(135deg,#fdf0e8 0%,#f5cba7 50%,#c9956a 100%);display:flex;align-items:center;justify-content:center;`,
+    gallery: [
+      `background:linear-gradient(160deg,#fde8d8,#f5cba7,#e8a87c);`,
+      `background:linear-gradient(160deg,#fdf0e8,#e8c9a8,#d4956a);`,
+      `background:linear-gradient(160deg,#f5e6d3,#dab896,#c89060);`,
+      `background:linear-gradient(160deg,#fdf4ee,#ecd4b8,#c8906a);`,
+    ],
+  },
+  événementiel: {
+    hero: `background:linear-gradient(135deg,#1a0533 0%,#4a1070 50%,#c9a96e 100%);display:flex;align-items:center;justify-content:center;`,
+    gallery: [
+      `background:linear-gradient(160deg,#1a0533,#6b3fa0,#c9a96e);`,
+      `background:linear-gradient(160deg,#0d0d1a,#4a1070,#9b59b6);`,
+      `background:linear-gradient(160deg,#13131f,#5c1a8a,#d4af37);`,
+      `background:linear-gradient(160deg,#1a0a2e,#7b2fa0,#c9a96e);`,
+    ],
+  },
+  automobile: {
+    hero: `background:linear-gradient(135deg,#0a0a0a 0%,#1a1a1a 40%,#e63946 80%,#ff6b7a 100%);display:flex;align-items:center;justify-content:center;`,
+    gallery: [
+      `background:linear-gradient(160deg,#0a0a0a,#2a2a2a,#444);`,
+      `background:linear-gradient(160deg,#141414,#1e1e1e,#e63946);`,
+      `background:linear-gradient(160deg,#0d0d0d,#252525,#6c757d);`,
+      `background:linear-gradient(160deg,#0a0a0a,#333,#555);`,
+    ],
+  },
+  immobilier: {
+    hero: `background:linear-gradient(135deg,#0e1a2b 0%,#142235 50%,#c9a96e 100%);display:flex;align-items:center;justify-content:center;`,
+    gallery: [
+      `background:linear-gradient(160deg,#f8f9fa,#e9ecef,#c9a96e);`,
+      `background:linear-gradient(160deg,#f0f2f5,#dde2e8,#1a2744);`,
+      `background:linear-gradient(160deg,#f8f9fa,#e8ebee,#b8966a);`,
+      `background:linear-gradient(160deg,#f5f6f8,#e2e6ea,#c9a96e);`,
+    ],
+  },
+  fitness: {
+    hero: `background:linear-gradient(135deg,#0a0e1a 0%,#1a2030 40%,#f97316 80%,#fb923c 100%);display:flex;align-items:center;justify-content:center;`,
+    gallery: [
+      `background:linear-gradient(160deg,#0a0e1a,#1a2030,#f97316);`,
+      `background:linear-gradient(160deg,#111827,#1f2937,#22d3ee);`,
+      `background:linear-gradient(160deg,#0f172a,#1e293b,#f97316);`,
+      `background:linear-gradient(160deg,#0a0e1a,#1a2030,#ff6b35);`,
+    ],
+  },
+  'e-commerce': {
+    hero: `background:linear-gradient(135deg,#fafaf8 0%,#f0ebe5 50%,#c9a96e 100%);display:flex;align-items:center;justify-content:center;`,
+    gallery: [
+      `background:linear-gradient(160deg,#fafafa,#f0ebe5,#e8ddd0);`,
+      `background:linear-gradient(160deg,#f5f0eb,#e8ddd0,#c8a882);`,
+      `background:linear-gradient(160deg,#fdf8f3,#f0e8dc,#d8c8b4);`,
+      `background:linear-gradient(160deg,#fafaf8,#f4eeea,#c9a96e);`,
+    ],
+  },
+  coaching: {
+    hero: `background:linear-gradient(135deg,#f0f4ff 0%,#c7d2fe 50%,#4f46e5 100%);display:flex;align-items:center;justify-content:center;`,
+    gallery: [
+      `background:linear-gradient(160deg,#f0f4ff,#c7d2fe,#4f46e5);`,
+      `background:linear-gradient(160deg,#f5f3ff,#ddd6fe,#7c3aed);`,
+      `background:linear-gradient(160deg,#eff6ff,#bfdbfe,#3b82f6);`,
+      `background:linear-gradient(160deg,#f0fdf4,#bbf7d0,#22c55e);`,
+    ],
+  },
+}
+
+function sectorVisual(sector: string, type: 'hero' | 'gallery', idx = 0): string {
+  const s = sector.toLowerCase()
+  for (const key of Object.keys(SECTOR_VISUALS)) {
+    if (s.includes(key)) {
+      const vis = SECTOR_VISUALS[key]
+      if (type === 'hero') return vis.hero
+      return vis.gallery[idx % vis.gallery.length]
+    }
+  }
+  return type === 'hero'
+    ? `background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);display:flex;align-items:center;justify-content:center;`
+    : `background:linear-gradient(160deg,#f6f1ff,#e2d9f3,#9f7aea);`
+}
+
+function photoOrVisual(photos: string[], idx: number, sector: string, style: string, w = '100%', h = '100%'): string {
+  if (photos[idx]) {
+    return `<img src="${photos[idx]}" alt="Photo" style="width:${w};height:${h};object-fit:cover;">`
+  }
+  const emoji = sector.includes('restaurant') ? '🍽️' : sector.includes('beauté') ? '💆' : sector.includes('événement') ? '✨' : sector.includes('auto') ? '🚗' : sector.includes('fitness') ? '💪' : sector.includes('coaching') ? '🎯' : sector.includes('immobilier') ? '🏠' : sector.includes('e-commerce') ? '✦' : '📸'
+  return `<div style="width:${w};height:${h};${sectorVisual(sector,'hero')};border-radius:inherit;"><div style="font-size:5rem;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.3));">${emoji}</div></div>`
+}
+
+function galleryPhotoOrVisual(photos: string[], idx: number, sector: string): string {
+  if (photos[idx]) {
+    return `<img src="${photos[idx]}" alt="Réalisation" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform=''">`
+  }
+  const labels = {
+    restaurant: ['Entrée du chef','Plat signature','Dessert maison','Salle & ambiance'],
+    beauté: ['Soin visage','Nail art','Massage','Maquillage'],
+    événementiel: ['Mariage','Gala','Cocktail','Décoration'],
+    automobile: ['Détailing','Carrosserie','Diagnostic','Livraison'],
+    fitness: ['Cardio','Muscu','Cours collectif','Coaching'],
+    coaching: ['Séance 1:1','Atelier groupe','Formation','Résultats'],
+    'e-commerce': ['Produit phare','Collection','Coffret','Livraison'],
+    immobilier: ['Appartement','Villa','Bureau','Terrain'],
+  }
+  let label = 'Réalisation'
+  for (const [key, vals] of Object.entries(labels)) {
+    if (sector.toLowerCase().includes(key)) { label = vals[idx % vals.length]; break }
+  }
+  const bg = sectorVisual(sector, 'gallery', idx)
+  return `<div style="width:100%;height:100%;${bg};border-radius:inherit;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:16px;"><span style="background:rgba(0,0,0,0.45);color:white;font-size:0.75rem;font-weight:600;padding:4px 10px;border-radius:20px;backdrop-filter:blur(4px);">${label}</span></div>`
+}
+
+function buildGallerySection(preset: DAPreset, photos: string[], sector: string): string {
+  const { palette } = preset
+  const isDarkBg = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+  const items = [0,1,2,3].map((i) => `
+    <div class="card-3d animate-on-scroll delay-${i+1}" style="border-radius:16px;overflow:hidden;aspect-ratio:1;box-shadow:0 4px 20px rgba(0,0,0,0.1);">
+      ${galleryPhotoOrVisual(photos, i+1, sector)}
+    </div>
+  `)
   return `
-<section id="galerie" style="padding:90px 5%;background:${isDark ? '#0a0a12' : '#fffaf5'};">
+<section id="galerie" style="padding:90px 5%;background:${isDarkBg ? '#0a0a12' : '#fffaf5'};">
   <div class="container">
     <div style="text-align:center;margin-bottom:48px;" class="animate-on-scroll">
       <span class="badge">Portfolio</span>
       <h2 class="section-title" style="margin-top:16px;">Nos réalisations</h2>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;" class="animate-on-scroll delay-1">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
       ${items.join('')}
     </div>
   </div>
@@ -594,9 +717,7 @@ function buildSplitHero(preset: DAPreset, project: GeneratedProject, photos: str
   const { businessName, sector, city, copywriting } = project
   const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
 
-  const heroImage = photos.length > 0
-    ? `<img src="${photos[0]}" alt="${businessName}" style="width:100%;height:100%;object-fit:cover;">`
-    : `<div style="width:100%;height:100%;background:${palette.gradient};display:flex;align-items:center;justify-content:center;font-size:6rem;">${preset.heroEmoji}</div>`
+  const heroImage = photoOrVisual(photos, 0, sector, project.style ?? '')
 
   return `
 <!-- HERO — split-hero -->
@@ -629,9 +750,7 @@ function buildCenteredHero(preset: DAPreset, project: GeneratedProject, photos: 
   const { businessName, sector, city, copywriting } = project
   const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
 
-  const heroImage = photos.length > 0
-    ? `<img src="${photos[0]}" alt="${businessName}" style="width:100%;height:520px;object-fit:cover;">`
-    : `<div style="width:100%;height:520px;background:${palette.gradient};display:flex;align-items:center;justify-content:center;font-size:8rem;">${preset.heroEmoji}</div>`
+  const heroImage = photoOrVisual(photos, 0, sector, project.style ?? '', '100%', '520px')
 
   return `
 <!-- HERO — centered-hero -->
@@ -662,9 +781,7 @@ function buildEditorialHero(preset: DAPreset, project: GeneratedProject, photos:
   const { businessName, sector, city, copywriting } = project
   const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
 
-  const img = (idx: number, h: string) => photos[idx]
-    ? `<img src="${photos[idx]}" alt="Visual" style="width:100%;height:${h};object-fit:cover;">`
-    : `<div style="width:100%;height:${h};background:${palette.gradient};opacity:${0.6 + idx * 0.1};display:flex;align-items:center;justify-content:center;font-size:3rem;">${preset.heroEmoji}</div>`
+  const img = (idx: number, h: string) => photoOrVisual(photos, idx, sector, project.style ?? '', '100%', h)
 
   return `
 <!-- HERO — editorial-hero -->
@@ -708,13 +825,13 @@ function buildLuxuryFullscreen(preset: DAPreset, project: GeneratedProject, phot
   const { palette, typography } = preset
   const { businessName, sector, city, copywriting } = project
 
-  const bg = photos[0]
-    ? `url('${photos[0]}') center/cover no-repeat`
-    : palette.gradient
+  const bgStyle = photos[0]
+    ? `background:url('${photos[0]}') center/cover no-repeat`
+    : sectorVisual(sector, 'hero').replace('display:flex;align-items:center;justify-content:center;', '').replace(/;$/, '')
 
   return `
 <!-- HERO — luxury-fullscreen -->
-<section style="min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;background:${bg};text-align:center;">
+<section style="min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;${bgStyle};text-align:center;">
   <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,0.62) 0%,rgba(0,0,0,0.35) 100%);"></div>
   <div style="position:relative;z-index:2;padding:40px 5%;">
     <div class="animate-on-scroll" style="display:inline-block;border:1px solid rgba(255,255,255,0.3);padding:6px 20px;border-radius:30px;color:rgba(255,255,255,0.75);font-size:0.82rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:32px;">${sector} · ${city}</div>
@@ -744,7 +861,6 @@ function buildEcommerceFocus(preset: DAPreset, project: GeneratedProject, photos
   const { businessName, sector, city, copywriting, services } = project
   const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
 
-  const productEmojis = ['🛍️','✨','📦','🎁','💎','🌟']
   return `
 <!-- HERO — ecommerce-focus -->
 <section style="padding:60px 5% 80px;background:${palette.background};">
@@ -762,7 +878,7 @@ function buildEcommerceFocus(preset: DAPreset, project: GeneratedProject, photos
       <div class="animate-on-scroll from-right" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         ${services.slice(0,4).map((s, i) => `
         <div class="card-3d" style="background:${isDark ? '#1a1a24' : 'white'};border-radius:18px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.08);">
-          <div style="height:140px;background:${palette.gradient};opacity:0.85;display:flex;align-items:center;justify-content:center;font-size:3rem;">${productEmojis[i % 6]}</div>
+          <div style="height:140px;overflow:hidden;position:relative;">${galleryPhotoOrVisual(photos, i, sector)}</div>
           <div style="padding:14px;">
             <div style="font-weight:700;color:${palette.text};font-size:0.9rem;margin-bottom:6px;">${s}</div>
             <div style="font-weight:800;color:${palette.primary};">${39 + i * 20}€</div>
@@ -789,9 +905,7 @@ function buildLocalConversion(preset: DAPreset, project: GeneratedProject, photo
   const { businessName, sector, city, copywriting, services } = project
   const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
 
-  const heroImage = photos[0]
-    ? `<img src="${photos[0]}" alt="${businessName}" style="width:100%;height:100%;object-fit:cover;">`
-    : `<div style="width:100%;height:100%;background:${palette.gradient};display:flex;align-items:center;justify-content:center;font-size:5rem;">${preset.heroEmoji}</div>`
+  const heroImage = photoOrVisual(photos, 0, sector, project.style ?? '')
 
   return `
 <!-- HERO — local-conversion -->
@@ -831,14 +945,8 @@ function buildEventPortfolio(preset: DAPreset, project: GeneratedProject, photos
   const { businessName, sector, city, copywriting } = project
   const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
 
-  const mainImage = photos[0]
-    ? `<img src="${photos[0]}" alt="${businessName}" style="width:100%;height:100%;object-fit:cover;">`
-    : `<div style="width:100%;height:100%;background:${palette.gradient};display:flex;align-items:center;justify-content:center;font-size:7rem;">${preset.heroEmoji}</div>`
-
-  const gridImages = [1,2,3].map((i) => photos[i]
-    ? `<img src="${photos[i]}" alt="Réalisation" style="width:100%;height:100%;object-fit:cover;">`
-    : `<div style="width:100%;height:100%;background:${palette.gradient};opacity:${0.5 + i * 0.15};display:flex;align-items:center;justify-content:center;font-size:3rem;">${preset.heroEmoji}</div>`
-  )
+  const mainImage = photoOrVisual(photos, 0, sector, project.style ?? '')
+  const gridImages = [1,2,3].map((i) => galleryPhotoOrVisual(photos, i, sector))
 
   return `
 <!-- HERO — event-portfolio -->
@@ -883,10 +991,7 @@ function buildAppLanding(preset: DAPreset, project: GeneratedProject, photos: st
   const { businessName, sector, city, copywriting, services } = project
   const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
 
-  const heroImage = photos[0]
-    ? `<img src="${photos[0]}" alt="${businessName}" style="width:100%;height:100%;object-fit:cover;border-radius:20px;">`
-    : `<div style="width:100%;height:100%;background:${palette.gradient};border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:6rem;">${preset.heroEmoji}</div>`
-
+  const heroImage = photoOrVisual(photos, 0, sector, project.style ?? '')
   const featureIcons = ['⚡','🎯','🔥','💡','📈','🛡️']
   return `
 <!-- HERO — app-landing -->
@@ -1050,7 +1155,7 @@ ${buildServicesSection(preset, services)}
 ${automationSection}
 ${ecommerceSection}
 
-${buildGallerySection(preset, photos)}
+${buildGallerySection(preset, photos, sector)}
 
 ${buildTestimonialsSection(preset, copywriting.testimonials)}
 
