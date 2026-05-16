@@ -8,14 +8,17 @@ import type {
   GeneratedFile,
 } from '@/types'
 import { generateAutomationSales } from '@/lib/automationOptions'
+import { selectDAPreset } from '@/lib/designEngine'
+import type { DAPreset } from '@/lib/designEngine'
 
 // ─── Sector detection ────────────────────────────────────────────────────────
 
 function detectSector(prompt: string): string {
   const p = prompt.toLowerCase()
-  if (/beauté|coiffeur|coiffure|esthétique|spa|bien.être|massage|onglerie|nail|beauty|salon/.test(p)) return 'beauté'
+  if (/beauté|coiffeur|coiffure|esthétique|spa|bien.être|massage|onglerie|nail|beauty|salon|brow|lash/.test(p)) return 'beauté'
   if (/restaurant|café|cafe|brasserie|pizzeria|gastronomie|traiteur|cuisine|chef|bistro/.test(p)) return 'restaurant'
-  if (/mariage|événementiel|evenement|event|wedding|photographe|photo/.test(p)) return 'événementiel'
+  if (/mariage|wedding planner|cérémonie/.test(p)) return 'mariage'
+  if (/événementiel|evenement|event|animation|soirée/.test(p)) return 'événementiel'
   if (/automobile|garage|carrosserie|détailing|detailing|auto|voiture|mécanique/.test(p)) return 'automobile'
   if (/boutique|mode|prêt.à.porter|accessoires|fashion|vêtement|vetement/.test(p)) return 'mode'
   if (/parfum|cosmétique|cosmetique|luxe|luxury|premium|haut.de.gamme/.test(p)) return 'luxe'
@@ -25,7 +28,7 @@ function detectSector(prompt: string): string {
   if (/fitness|sport|salle de sport|coach sportif|gym|musculation/.test(p)) return 'fitness'
   if (/hôtel|hotel|gîte|gite|chambre|hébergement/.test(p)) return 'hôtellerie'
   if (/e.commerce|ecommerce|dropshipping|shopify|boutique en ligne|vente en ligne/.test(p)) return 'e-commerce'
-  if (/artisan|plombier|électricien|menuisier|bâtiment|renovation|peintre/.test(p)) return 'artisan'
+  if (/artisan|plombier|électricien|menuisier|bâtiment|renovation|peintre|maçon/.test(p)) return 'artisan'
   return 'general'
 }
 
@@ -88,6 +91,7 @@ function detectBusinessName(prompt: string, sector: string): string {
   const defaults: Record<string, string> = {
     beauté: 'Beauty Studio',
     restaurant: 'Le Gourmet',
+    mariage: 'Mariage Prestige',
     événementiel: 'Prestige Events',
     automobile: 'AutoPremium',
     mode: 'Fashion House',
@@ -107,37 +111,21 @@ function detectBusinessName(prompt: string, sector: string): string {
 // ─── Design system by sector ─────────────────────────────────────────────────
 
 function getDesignSystem(sector: string, style: string): DesignSystem {
-  const palettes: Record<string, DesignSystem['palette']> = {
-    beauté: { background: '#fdf8f3', surface: '#fff4ea', primary: '#c9956a', secondary: '#e8c4a0', accent: '#8b6f5e', text: '#2d1b0e', muted: '#8b7355' },
-    événementiel: { background: '#1a1225', surface: '#241830', primary: '#d4af37', secondary: '#9b59b6', accent: '#ff69b4', text: '#ffffff', muted: '#a89bc0' },
-    restaurant: { background: '#fdf6ec', surface: '#fff8f0', primary: '#c0392b', secondary: '#e67e22', accent: '#27ae60', text: '#2c1a0e', muted: '#8b6555' },
-    luxe: { background: '#0d0d0d', surface: '#1a1a1a', primary: '#d4af37', secondary: '#c0a080', accent: '#ff69b4', text: '#ffffff', muted: '#a0947a' },
-    automobile: { background: '#1a1a2e', surface: '#16213e', primary: '#e74c3c', secondary: '#95a5a6', accent: '#3498db', text: '#ffffff', muted: '#7f8c8d' },
-    immobilier: { background: '#f8f9fa', surface: '#ffffff', primary: '#2c3e50', secondary: '#d4af37', accent: '#3498db', text: '#1a1a2e', muted: '#6c757d' },
-    coaching: { background: '#f0f4ff', surface: '#ffffff', primary: '#4f8cff', secondary: '#8b5cf6', accent: '#55c47a', text: '#1a1a2e', muted: '#6b7280' },
-    fitness: { background: '#0f172a', surface: '#1e293b', primary: '#f97316', secondary: '#fb923c', accent: '#22d3ee', text: '#ffffff', muted: '#94a3b8' },
-    mode: { background: '#fafafa', surface: '#ffffff', primary: '#1a1a1a', secondary: '#d4af37', accent: '#ff69b4', text: '#1a1a1a', muted: '#6b7280' },
-    hôtellerie: { background: '#fdf8f0', surface: '#ffffff', primary: '#8b6914', secondary: '#d4af37', accent: '#27ae60', text: '#2c1a0e', muted: '#8b7355' },
-    médical: { background: '#f0f9ff', surface: '#ffffff', primary: '#0284c7', secondary: '#38bdf8', accent: '#10b981', text: '#0c1a2e', muted: '#6b7280' },
-    'e-commerce': { background: '#fffaf3', surface: '#ffffff', primary: '#ff5a1f', secondary: '#ff4fb8', accent: '#8b5cf6', text: '#171717', muted: '#6b625b' },
-    artisan: { background: '#fdf6ec', surface: '#ffffff', primary: '#92400e', secondary: '#d97706', accent: '#65a30d', text: '#1c1003', muted: '#78716c' },
-    general: { background: '#fffaf3', surface: '#fff8ee', primary: '#ff5a1f', secondary: '#ff4fb8', accent: '#8b5cf6', text: '#171717', muted: '#6b625b' },
-  }
-
-  const palette = palettes[sector] ?? palettes.general
-
-  if (style === 'luxe') {
-    palette.background = '#0d0d0d'
-    palette.primary = '#d4af37'
-    palette.text = '#ffffff'
-  }
-
+  const preset = selectDAPreset(sector, style, '')
   return {
-    palette,
-    mood: style,
-    typography: sector === 'luxe' || style === 'luxe' ? 'Playfair Display, serif' : 'Syne, sans-serif',
-    buttonStyle: style === 'minimaliste' ? 'outlined' : 'gradient',
-    cardStyle: style === 'luxe' ? 'dark-glass' : 'white-shadow',
+    palette: {
+      background: preset.palette.background,
+      surface: preset.palette.surface,
+      primary: preset.palette.primary,
+      secondary: preset.palette.secondary,
+      accent: preset.palette.accent,
+      text: preset.palette.text,
+      muted: preset.palette.muted,
+    },
+    mood: preset.mood,
+    typography: preset.typography.heading,
+    buttonStyle: preset.buttonStyle,
+    cardStyle: preset.cardStyle,
   }
 }
 
@@ -147,6 +135,7 @@ function getServices(sector: string): string[] {
   const map: Record<string, string[]> = {
     beauté: ['Coupe & Brushing', 'Coloration', 'Soins visage', 'Manucure & Pédicure', 'Épilation', 'Massage relaxant'],
     restaurant: ['Menu du jour', 'À la carte', 'Brunch du dimanche', 'Privatisation', 'Livraison', 'Click & Collect'],
+    mariage: ['Organisation de cérémonie', 'Décoration florale', 'Coordination jour J', 'Location de salle', 'Traiteur mariage', 'Photographie'],
     événementiel: ['Organisation mariage', 'Décoration florale', 'Animation soirée', 'Photographie', 'Traiteur', 'Location salle'],
     automobile: ['Entretien & révision', 'Carrosserie', 'Détailing intérieur', 'Polissage', 'Vitres teintées', 'Préparation vente'],
     mode: ['Prêt-à-porter femme', 'Prêt-à-porter homme', 'Accessoires', 'Retouches', 'Personal shopping', 'Créations sur-mesure'],
@@ -177,7 +166,7 @@ function getPainPoints(sector: string): string[] {
 }
 
 function getFAQ(sector: string, businessName: string): FAQItem[] {
-  const base: FAQItem[] = [
+  return [
     { question: `Quels sont vos horaires d'ouverture ?`, answer: `Nous sommes ouverts du lundi au samedi de 9h à 19h. Contactez-nous pour un rendez-vous en dehors de ces horaires.` },
     { question: `Comment prendre rendez-vous ?`, answer: `Vous pouvez réserver directement via notre formulaire en ligne, par téléphone ou par WhatsApp. Réponse garantie sous 2h.` },
     { question: `Proposez-vous des devis gratuits ?`, answer: `Oui, tous nos devis sont gratuits et sans engagement. Décrivez votre projet et nous vous répondons sous 24h.` },
@@ -185,7 +174,6 @@ function getFAQ(sector: string, businessName: string): FAQItem[] {
     { question: `Êtes-vous disponibles en urgence ?`, answer: `Selon disponibilités, nous pouvons traiter les demandes urgentes. Contactez-nous directement par téléphone pour toute urgence.` },
     { question: `Avez-vous des avis clients vérifiés ?`, answer: `${businessName} est noté 4.9/5 sur Google avec plus de 50 avis. Tous nos avis sont authentiques et vérifiés par Google.` },
   ]
-  return base
 }
 
 function getTestimonials(sector: string): Testimonial[] {
@@ -213,7 +201,7 @@ function getTestimonials(sector: string): Testimonial[] {
 
 function generateCopywriting(businessName: string, sector: string, city: string, style: string, goal: string) {
   const sectorLabels: Record<string, string> = {
-    beauté: 'beauté & bien-être', restaurant: 'gastronomie', événementiel: 'événementiel',
+    beauté: 'beauté & bien-être', restaurant: 'gastronomie', événementiel: 'événementiel', mariage: 'mariage',
     automobile: 'automobile', mode: 'mode', luxe: 'luxe & cosmétique', immobilier: 'immobilier',
     coaching: 'coaching', médical: 'santé', fitness: 'fitness', hôtellerie: 'hôtellerie',
     'e-commerce': 'e-commerce', artisan: 'artisan', general: 'services',
@@ -248,90 +236,789 @@ function generateCopywriting(businessName: string, sector: string, city: string,
   }
 }
 
-// ─── HTML generation ──────────────────────────────────────────────────────────
+// ─── Shared CSS animations & utilities ───────────────────────────────────────
+
+function getSharedCSS(preset: DAPreset): string {
+  const { palette, typography } = preset
+  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+
+  return `
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;}
+    body{background:${palette.background};color:${palette.text};font-family:${typography.body};line-height:1.6;}
+    a{color:inherit;text-decoration:none;}
+    .container{max-width:1140px;margin:0 auto;padding:0 5%;}
+
+    /* ── Animations ── */
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes slideInLeft{from{opacity:0;transform:translateX(-30px);}to{opacity:1;transform:translateX(0);}}
+    @keyframes slideInRight{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
+    @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+    @keyframes pulse-glow{0%,100%{box-shadow:0 0 20px ${palette.primary}44;}50%{box-shadow:0 0 40px ${palette.primary}88;}}
+    @keyframes count-up{from{opacity:0;transform:scale(0.8);}to{opacity:1;transform:scale(1);}}
+    @keyframes shimmer{0%{background-position:-200% 0;}100%{background-position:200% 0;}}
+    @keyframes revealUp{from{opacity:0;transform:translateY(40px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+    /* ── Scroll-reveal ── */
+    .animate-on-scroll{opacity:0;transform:translateY(28px);transition:opacity 0.7s ease,transform 0.7s ease;}
+    .animate-on-scroll.from-left{transform:translateX(-28px);}
+    .animate-on-scroll.from-right{transform:translateX(28px);}
+    .animate-on-scroll.visible{opacity:1;transform:none;}
+    .delay-1{transition-delay:0.1s!important;}
+    .delay-2{transition-delay:0.2s!important;}
+    .delay-3{transition-delay:0.3s!important;}
+    .delay-4{transition-delay:0.4s!important;}
+    .delay-5{transition-delay:0.5s!important;}
+
+    /* ── 3D cards ── */
+    .card-3d{transition:transform 0.35s ease,box-shadow 0.35s ease;transform-style:preserve-3d;cursor:pointer;}
+    .card-3d:hover{transform:perspective(800px) rotateX(-3deg) rotateY(3deg) translateY(-6px);box-shadow:20px 20px 60px rgba(0,0,0,0.18);}
+
+    /* ── Glow buttons ── */
+    .btn-glow{position:relative;overflow:hidden;transition:all 0.3s ease;display:inline-flex;align-items:center;gap:8px;}
+    .btn-glow::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(255,255,255,0.3) 0%,transparent 60%);opacity:0;transition:opacity 0.3s;}
+    .btn-glow:hover::after{opacity:1;}
+    .btn-glow:hover{transform:translateY(-3px);}
+
+    /* ── Primary button ── */
+    .btn-primary{background:${palette.gradient};color:white;padding:14px 28px;border-radius:12px;font-weight:700;font-family:${typography.heading};border:none;cursor:pointer;box-shadow:0 4px 16px ${palette.primary}44;font-size:1rem;}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px ${palette.primary}66;}
+
+    /* ── Secondary button ── */
+    .btn-secondary{background:transparent;color:${palette.text};padding:14px 28px;border-radius:12px;font-weight:600;font-family:${typography.heading};border:1.5px solid ${isDark ? '#444' : '#e0d8d0'};cursor:pointer;transition:all 0.2s;font-size:1rem;display:inline-flex;align-items:center;gap:8px;}
+    .btn-secondary:hover{border-color:${palette.primary};color:${palette.primary};transform:translateY(-1px);}
+
+    /* ── Badge ── */
+    .badge{display:inline-block;background:${palette.gradient};color:white;padding:5px 14px;border-radius:20px;font-size:0.82rem;font-weight:600;}
+
+    /* ── Section title ── */
+    .section-title{font-family:${typography.heading};font-size:clamp(26px,4vw,42px);color:${palette.text};line-height:1.2;}
+    .section-sub{color:${palette.muted};max-width:600px;margin:12px auto 0;line-height:1.7;}
+
+    /* ── Responsive ── */
+    @media(max-width:768px){
+      .hide-mobile{display:none!important;}
+      .grid-2,.hero-2col{grid-template-columns:1fr!important;}
+      .grid-3{grid-template-columns:1fr!important;}
+      .grid-4{grid-template-columns:1fr 1fr!important;}
+    }
+  `
+}
+
+// ─── Shared JS ────────────────────────────────────────────────────────────────
+
+function getSharedJS(palette: DAPreset['palette']): string {
+  return `
+  // FAQ accordion
+  function toggleFaq(i){
+    var ans=document.getElementById('faq-answer-'+i);
+    var icon=document.getElementById('faq-icon-'+i);
+    var isOpen=ans.style.display==='block';
+    document.querySelectorAll('[id^="faq-answer-"]').forEach(function(el){el.style.display='none';});
+    document.querySelectorAll('[id^="faq-icon-"]').forEach(function(el){el.textContent='+';el.style.transform='';});
+    if(!isOpen){ans.style.display='block';icon.textContent='−';icon.style.transform='rotate(180deg)';}
+  }
+
+  // Form submit
+  function submitForm(e){
+    e.preventDefault();
+    var s=document.getElementById('form-success');
+    if(s){s.style.display='block';}
+    e.target.reset();
+    setTimeout(function(){if(s)s.style.display='none';},5000);
+  }
+
+  // Scroll-reveal via IntersectionObserver
+  var observer=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){entry.target.classList.add('visible');observer.unobserve(entry.target);}
+    });
+  },{threshold:0.15});
+  document.querySelectorAll('.animate-on-scroll').forEach(function(el){observer.observe(el);});
+
+  // Animated counters
+  function animateCount(el,target,suffix){
+    var start=0;var duration=1500;var startTime=null;
+    function step(timestamp){
+      if(!startTime)startTime=timestamp;
+      var progress=Math.min((timestamp-startTime)/duration,1);
+      var eased=1-Math.pow(1-progress,3);
+      el.textContent=Math.floor(eased*target)+(suffix||'');
+      if(progress<1)requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  var countObserver=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        var el=entry.target;
+        var target=parseInt(el.getAttribute('data-target')||'0',10);
+        var suffix=el.getAttribute('data-suffix')||'';
+        animateCount(el,target,suffix);
+        countObserver.unobserve(el);
+      }
+    });
+  },{threshold:0.5});
+  document.querySelectorAll('.count-up').forEach(function(el){countObserver.observe(el);});
+  `
+}
+
+// ─── Shared header & footer ───────────────────────────────────────────────────
+
+function buildHeader(preset: DAPreset, businessName: string, ctaPrimary: string, services: string[]): string {
+  const { palette, typography } = preset
+  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+  return `
+<header style="position:sticky;top:0;z-index:100;background:${palette.background}ee;backdrop-filter:blur(14px);border-bottom:1px solid ${isDark ? '#ffffff18' : '#0000000f'};padding:16px 5%;">
+  <div class="container" style="display:flex;justify-content:space-between;align-items:center;">
+    <a href="#" style="font-family:${typography.heading};font-size:1.4rem;font-weight:800;background:${palette.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">${businessName}</a>
+    <nav style="display:flex;gap:28px;align-items:center;" class="hide-mobile">
+      <a href="#services" style="color:${palette.muted};font-weight:500;transition:color 0.2s;" onmouseover="this.style.color='${palette.primary}'" onmouseout="this.style.color='${palette.muted}'">Services</a>
+      <a href="#galerie" style="color:${palette.muted};font-weight:500;transition:color 0.2s;" onmouseover="this.style.color='${palette.primary}'" onmouseout="this.style.color='${palette.muted}'">Galerie</a>
+      <a href="#avis" style="color:${palette.muted};font-weight:500;transition:color 0.2s;" onmouseover="this.style.color='${palette.primary}'" onmouseout="this.style.color='${palette.muted}'">Avis</a>
+      <a href="#contact" style="color:${palette.muted};font-weight:500;transition:color 0.2s;" onmouseover="this.style.color='${palette.primary}'" onmouseout="this.style.color='${palette.muted}'">Contact</a>
+    </nav>
+    <a href="#contact" class="btn-primary btn-glow" style="padding:10px 20px;font-size:0.9rem;">${ctaPrimary.replace(' →', '')}</a>
+  </div>
+</header>`
+}
+
+function buildFooter(preset: DAPreset, businessName: string, city: string, sector: string, services: string[]): string {
+  const { palette, typography } = preset
+  return `
+<footer style="background:#0a0a0a;color:#e5e5e5;padding:64px 5% 32px;">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px;" class="grid-4">
+      <div>
+        <div style="font-family:${typography.heading};font-size:1.5rem;font-weight:800;background:${palette.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;">${businessName}</div>
+        <p style="color:#9ca3af;line-height:1.7;max-width:280px;margin-bottom:24px;">Votre expert ${sector} à ${city}. Qualité, professionnalisme et satisfaction garantis.</p>
+        <div style="display:flex;gap:12px;">
+          ${['In','Fb','Tk'].map((s) => `<a href="#" style="width:36px;height:36px;background:#ffffff11;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:0.8rem;transition:all 0.2s;font-weight:700;" onmouseover="this.style.background='${palette.primary}';this.style.color='white'" onmouseout="this.style.background='#ffffff11';this.style.color='#9ca3af'">${s}</a>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div style="font-family:${typography.heading};font-weight:700;margin-bottom:16px;color:white;">Services</div>
+        ${services.slice(0, 4).map((s) => `<a href="#services" style="display:block;color:#9ca3af;margin-bottom:8px;font-size:0.9rem;transition:color 0.2s;" onmouseover="this.style.color='${palette.primary}'" onmouseout="this.style.color='#9ca3af'">${s}</a>`).join('')}
+      </div>
+      <div>
+        <div style="font-family:${typography.heading};font-weight:700;margin-bottom:16px;color:white;">Navigation</div>
+        ${['Accueil', 'Services', 'Galerie', 'Avis', 'Contact'].map((n) => `<a href="#${n.toLowerCase()}" style="display:block;color:#9ca3af;margin-bottom:8px;font-size:0.9rem;transition:color 0.2s;" onmouseover="this.style.color='${palette.primary}'" onmouseout="this.style.color='#9ca3af'">${n}</a>`).join('')}
+      </div>
+      <div>
+        <div style="font-family:${typography.heading};font-weight:700;margin-bottom:16px;color:white;">Contact</div>
+        <div style="color:#9ca3af;font-size:0.9rem;line-height:2.2;">
+          <div>📍 ${city}, France</div>
+          <div>📞 06 00 00 00 00</div>
+          <div>✉️ contact@${businessName.toLowerCase().replace(/\s/g, '')}.fr</div>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid #ffffff11;padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <p style="color:#6b7280;font-size:0.85rem;">© ${new Date().getFullYear()} ${businessName}. Tous droits réservés.</p>
+      <div style="display:flex;gap:20px;">
+        ${['Mentions légales','CGV','Confidentialité'].map((l) => `<a href="#" style="color:#6b7280;font-size:0.85rem;transition:color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">${l}</a>`).join('')}
+      </div>
+    </div>
+  </div>
+</footer>`
+}
+
+// ─── Shared sections ──────────────────────────────────────────────────────────
+
+function buildServicesSection(preset: DAPreset, services: string[]): string {
+  const { palette, typography } = preset
+  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+  const emojis = ['✂️','💅','🌿','💆','🪄','⭐','🎯','💎','🔥','✨','🎊','🌟']
+  return `
+<section id="services" style="padding:90px 5%;background:${isDark ? '#111118' : palette.surface};">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:56px;" class="animate-on-scroll">
+      <span class="badge">Nos services</span>
+      <h2 class="section-title" style="margin-top:16px;">Ce que nous proposons</h2>
+      <p class="section-sub">Une gamme complète de services adaptés à vos besoins.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;" class="grid-3">
+      ${services.map((s, i) => `
+      <div class="card-3d animate-on-scroll delay-${(i % 4) + 1}" style="background:${isDark ? '#1a1a24' : 'white'};border-radius:18px;padding:32px;box-shadow:0 2px 20px rgba(0,0,0,0.07);border:1px solid ${palette.primary}18;">
+        <div style="font-size:2.2rem;margin-bottom:14px;animation:float 3s ease-in-out infinite;animation-delay:${i * 0.2}s;">${emojis[i % 12]}</div>
+        <h3 style="font-family:${typography.heading};color:${palette.text};margin-bottom:10px;font-size:1.1rem;">${s}</h3>
+        <p style="color:${palette.muted};font-size:0.9rem;line-height:1.65;margin-bottom:16px;">Service professionnel réalisé par nos experts avec des produits de qualité supérieure.</p>
+        <div style="font-weight:700;color:${palette.primary};font-size:1rem;">${30 + i * 15}€ <span style="font-weight:400;color:${palette.muted};font-size:0.85rem;">/ session</span></div>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`
+}
+
+function buildTestimonialsSection(preset: DAPreset, testimonials: Testimonial[]): string {
+  const { palette, typography } = preset
+  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+  return `
+<section id="avis" style="padding:90px 5%;background:${isDark ? '#0d0d14' : palette.surfaceAlt ?? '#f8f5f0'};">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:56px;" class="animate-on-scroll">
+      <span class="badge">Témoignages</span>
+      <h2 class="section-title" style="margin-top:16px;">Ce que disent nos clients</h2>
+      <p style="color:${palette.muted};font-size:0.85rem;margin-top:8px;">Avis représentatifs de notre clientèle</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
+      ${testimonials.map((t, i) => `
+      <div class="card-3d animate-on-scroll delay-${i + 1}" style="background:${isDark ? '#1a1a24' : 'white'};border-radius:18px;padding:30px;box-shadow:0 2px 20px rgba(0,0,0,0.07);">
+        <div style="color:#ffbe2e;font-size:1.2rem;margin-bottom:14px;">${'⭐'.repeat(t.rating)}</div>
+        <p style="color:${palette.muted};line-height:1.7;margin-bottom:18px;font-style:italic;">"${t.content}"</p>
+        <div style="border-top:1px solid ${isDark ? '#ffffff14' : '#e8e0d5'};padding-top:16px;">
+          <div style="font-weight:700;color:${palette.text};">${t.name}</div>
+          <div style="color:${palette.muted};font-size:0.85rem;">${t.role}</div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`
+}
+
+function buildFAQSection(preset: DAPreset, faq: FAQItem[]): string {
+  const { palette, typography } = preset
+  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+  return `
+<section style="padding:90px 5%;background:${isDark ? '#111118' : palette.surface};">
+  <div style="max-width:740px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:48px;" class="animate-on-scroll">
+      <span class="badge">FAQ</span>
+      <h2 class="section-title" style="margin-top:16px;">Questions fréquentes</h2>
+    </div>
+    <div class="animate-on-scroll">
+      ${faq.map((f, i) => `
+      <div style="border-bottom:1px solid ${isDark ? '#ffffff14' : '#e8e0d5'};">
+        <button onclick="toggleFaq(${i})" style="width:100%;text-align:left;padding:20px 0;background:none;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-family:${typography.heading};font-size:1rem;color:${palette.text};font-weight:600;">
+          ${f.question}
+          <span id="faq-icon-${i}" style="font-size:1.4rem;color:${palette.primary};transition:transform 0.3s;flex-shrink:0;">+</span>
+        </button>
+        <div id="faq-answer-${i}" style="display:none;padding-bottom:20px;color:${palette.muted};line-height:1.7;">${f.answer}</div>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`
+}
+
+function buildContactSection(preset: DAPreset, ctaPrimary: string, services: string[]): string {
+  const { palette, typography } = preset
+  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+  return `
+<section id="contact" style="padding:90px 5%;background:${isDark ? '#0a0a12' : '#fff8ee'};">
+  <div style="max-width:660px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:44px;" class="animate-on-scroll">
+      <span class="badge">Contact</span>
+      <h2 class="section-title" style="margin-top:16px;">Contactez-nous</h2>
+      <p class="section-sub" style="margin-top:8px;">Réponse garantie sous 2h en jours ouvrés.</p>
+    </div>
+    <form onsubmit="submitForm(event)" class="animate-on-scroll" style="background:${isDark ? '#1a1a24' : 'white'};border-radius:22px;padding:42px;box-shadow:0 4px 36px rgba(0,0,0,0.09);">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;" class="grid-2">
+        <div style="position:relative;">
+          <label style="position:absolute;top:-10px;left:12px;background:${isDark ? '#1a1a24' : 'white'};padding:0 4px;font-size:0.8rem;color:${palette.primary};font-weight:600;">Prénom & Nom *</label>
+          <input required type="text" placeholder="Marie Dupont" style="width:100%;padding:14px;border:1.5px solid ${isDark ? '#333' : '#e8e0d5'};border-radius:10px;background:transparent;color:${palette.text};font-family:${typography.body};font-size:1rem;outline:none;transition:border 0.2s;" onfocus="this.style.borderColor='${palette.primary}'" onblur="this.style.borderColor='${isDark ? '#333' : '#e8e0d5'}'">
+        </div>
+        <div style="position:relative;">
+          <label style="position:absolute;top:-10px;left:12px;background:${isDark ? '#1a1a24' : 'white'};padding:0 4px;font-size:0.8rem;color:${palette.primary};font-weight:600;">Téléphone *</label>
+          <input required type="tel" placeholder="06 00 00 00 00" style="width:100%;padding:14px;border:1.5px solid ${isDark ? '#333' : '#e8e0d5'};border-radius:10px;background:transparent;color:${palette.text};font-family:${typography.body};font-size:1rem;outline:none;" onfocus="this.style.borderColor='${palette.primary}'" onblur="this.style.borderColor='${isDark ? '#333' : '#e8e0d5'}'">
+        </div>
+      </div>
+      <div style="position:relative;margin-bottom:20px;">
+        <label style="position:absolute;top:-10px;left:12px;background:${isDark ? '#1a1a24' : 'white'};padding:0 4px;font-size:0.8rem;color:${palette.primary};font-weight:600;">Email *</label>
+        <input required type="email" placeholder="marie@email.com" style="width:100%;padding:14px;border:1.5px solid ${isDark ? '#333' : '#e8e0d5'};border-radius:10px;background:transparent;color:${palette.text};font-family:${typography.body};font-size:1rem;outline:none;" onfocus="this.style.borderColor='${palette.primary}'" onblur="this.style.borderColor='${isDark ? '#333' : '#e8e0d5'}'">
+      </div>
+      <div style="position:relative;margin-bottom:20px;">
+        <label style="position:absolute;top:-10px;left:12px;background:${isDark ? '#1a1a24' : 'white'};padding:0 4px;font-size:0.8rem;color:${palette.primary};font-weight:600;">Type de besoin</label>
+        <select style="width:100%;padding:14px;border:1.5px solid ${isDark ? '#333' : '#e8e0d5'};border-radius:10px;background:${isDark ? '#1a1a24' : 'white'};color:${palette.muted};font-family:${typography.body};font-size:1rem;outline:none;appearance:none;">
+          ${services.slice(0, 4).map((s) => `<option>${s}</option>`).join('')}
+          <option>Autre demande</option>
+        </select>
+      </div>
+      <div style="position:relative;margin-bottom:28px;">
+        <label style="position:absolute;top:-10px;left:12px;background:${isDark ? '#1a1a24' : 'white'};padding:0 4px;font-size:0.8rem;color:${palette.primary};font-weight:600;">Votre message</label>
+        <textarea placeholder="Décrivez votre projet ou votre besoin..." rows="4" style="width:100%;padding:14px;border:1.5px solid ${isDark ? '#333' : '#e8e0d5'};border-radius:10px;background:transparent;color:${palette.text};font-family:${typography.body};font-size:1rem;outline:none;resize:vertical;" onfocus="this.style.borderColor='${palette.primary}'" onblur="this.style.borderColor='${isDark ? '#333' : '#e8e0d5'}'"></textarea>
+      </div>
+      <button type="submit" class="btn-primary btn-glow" style="width:100%;padding:16px;border-radius:12px;border:none;cursor:pointer;font-size:1.1rem;justify-content:center;">${ctaPrimary}</button>
+      <p id="form-success" style="display:none;text-align:center;color:#22c55e;margin-top:16px;font-weight:600;">✓ Message envoyé ! Nous vous répondons sous 2h.</p>
+    </form>
+  </div>
+</section>`
+}
+
+function buildStatsRow(preset: DAPreset): string {
+  const { palette, typography } = preset
+  return `
+<div style="display:flex;gap:40px;margin-top:40px;padding-top:32px;border-top:1px solid ${palette.primary}22;flex-wrap:wrap;">
+  <div class="animate-on-scroll delay-1">
+    <div class="count-up section-title" data-target="200" data-suffix="+" style="font-size:1.9rem;font-weight:800;color:${palette.primary};">200+</div>
+    <div style="color:${palette.muted};font-size:0.85rem;">Clients satisfaits</div>
+  </div>
+  <div class="animate-on-scroll delay-2">
+    <div class="count-up section-title" data-target="49" data-suffix="★" style="font-size:1.9rem;font-weight:800;color:${palette.primary};">4.9★</div>
+    <div style="color:${palette.muted};font-size:0.85rem;">Note Google</div>
+  </div>
+  <div class="animate-on-scroll delay-3">
+    <div class="count-up section-title" data-target="5" data-suffix=" ans" style="font-size:1.9rem;font-weight:800;color:${palette.primary};">5 ans</div>
+    <div style="color:${palette.muted};font-size:0.85rem;">D'expérience</div>
+  </div>
+</div>`
+}
+
+function buildGallerySection(preset: DAPreset, photos: string[]): string {
+  const { palette, typography } = preset
+  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+  const items = photos.length > 1
+    ? photos.slice(1, 5).map((p, i) => `<div style="border-radius:14px;overflow:hidden;aspect-ratio:1;"><img src="${p}" alt="Photo ${i + 2}" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform=''"></div>`)
+    : ['#ece8e2','#e5e0d8','#f0ebe4','#e8e3dc'].map((c, i) => `<div style="background:${c};border-radius:14px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:#ccc;">📸</div>`)
+  return `
+<section id="galerie" style="padding:90px 5%;background:${isDark ? '#0a0a12' : '#fffaf5'};">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:48px;" class="animate-on-scroll">
+      <span class="badge">Portfolio</span>
+      <h2 class="section-title" style="margin-top:16px;">Nos réalisations</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;" class="animate-on-scroll delay-1">
+      ${items.join('')}
+    </div>
+  </div>
+</section>`
+}
+
+// ─── Layout generators ────────────────────────────────────────────────────────
+
+/**
+ * split-hero: 2-column grid, text left / visual right, stats bar below
+ */
+function buildSplitHero(preset: DAPreset, project: GeneratedProject, photos: string[]): string {
+  const { palette, typography } = preset
+  const { businessName, sector, city, copywriting } = project
+  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+
+  const heroImage = photos.length > 0
+    ? `<img src="${photos[0]}" alt="${businessName}" style="width:100%;height:100%;object-fit:cover;">`
+    : `<div style="width:100%;height:100%;background:${palette.gradient};display:flex;align-items:center;justify-content:center;font-size:6rem;">${preset.heroEmoji}</div>`
+
+  return `
+<!-- HERO — split-hero -->
+<section style="padding:80px 5% 60px;min-height:92vh;display:flex;align-items:center;background:radial-gradient(ellipse 700px 500px at 70% 30%,${palette.primary}14,transparent),radial-gradient(ellipse 500px 400px at 10% 80%,${palette.secondary}0e,transparent);">
+  <div class="container" style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;" class="hero-2col">
+    <div>
+      <span class="badge animate-on-scroll" style="margin-bottom:24px;">✦ ${sector.charAt(0).toUpperCase()+sector.slice(1)} · ${city}</span>
+      <h1 class="animate-on-scroll delay-1" style="font-family:${typography.heading};font-size:clamp(36px,5vw,62px);line-height:1.12;margin:18px 0 22px;color:${palette.text};">
+        ${copywriting.heroTitle.replace(/(\w[\w\s]+)$/, `<span style="background:${palette.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">$1</span>`)}
+      </h1>
+      <p class="animate-on-scroll delay-2" style="font-size:1.12rem;color:${palette.muted};line-height:1.75;margin-bottom:36px;max-width:500px;">${copywriting.heroSubtitle}</p>
+      <div class="animate-on-scroll delay-3" style="display:flex;gap:16px;flex-wrap:wrap;">
+        <a href="#contact" class="btn-primary btn-glow">${copywriting.ctaPrimary}</a>
+        <a href="#services" class="btn-secondary">${copywriting.ctaSecondary}</a>
+      </div>
+      ${buildStatsRow(preset)}
+    </div>
+    <div class="animate-on-scroll from-right" style="border-radius:24px;overflow:hidden;box-shadow:0 28px 72px ${palette.primary}33;aspect-ratio:4/3;animation:float 4s ease-in-out infinite;">
+      ${heroImage}
+    </div>
+  </div>
+</section>`
+}
+
+/**
+ * centered-hero: large centered title, subtitle, CTA, full-width image below
+ */
+function buildCenteredHero(preset: DAPreset, project: GeneratedProject, photos: string[]): string {
+  const { palette, typography } = preset
+  const { businessName, sector, city, copywriting } = project
+  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+
+  const heroImage = photos.length > 0
+    ? `<img src="${photos[0]}" alt="${businessName}" style="width:100%;height:520px;object-fit:cover;">`
+    : `<div style="width:100%;height:520px;background:${palette.gradient};display:flex;align-items:center;justify-content:center;font-size:8rem;">${preset.heroEmoji}</div>`
+
+  return `
+<!-- HERO — centered-hero -->
+<section style="padding:100px 5% 0;text-align:center;background:radial-gradient(ellipse 900px 500px at 50% 0%,${palette.primary}12,transparent);">
+  <div class="container">
+    <span class="badge animate-on-scroll">✦ ${sector.charAt(0).toUpperCase()+sector.slice(1)} · ${city}</span>
+    <h1 class="animate-on-scroll delay-1" style="font-family:${typography.heading};font-size:clamp(42px,6vw,78px);line-height:1.08;margin:24px 0 22px;color:${palette.text};max-width:900px;margin-left:auto;margin-right:auto;">
+      ${copywriting.heroTitle.split(' ').slice(0,4).join(' ')}<br>
+      <span style="background:${palette.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">${copywriting.heroTitle.split(' ').slice(4).join(' ') || businessName}</span>
+    </h1>
+    <p class="animate-on-scroll delay-2" style="font-size:1.18rem;color:${palette.muted};line-height:1.75;max-width:600px;margin:0 auto 40px;">${copywriting.heroSubtitle}</p>
+    <div class="animate-on-scroll delay-3" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:64px;">
+      <a href="#contact" class="btn-primary btn-glow">${copywriting.ctaPrimary}</a>
+      <a href="#services" class="btn-secondary">${copywriting.ctaSecondary}</a>
+    </div>
+  </div>
+  <div class="animate-on-scroll" style="border-radius:24px 24px 0 0;overflow:hidden;max-width:1140px;margin:0 auto;box-shadow:0 -8px 48px ${palette.primary}22;">
+    ${heroImage}
+  </div>
+</section>`
+}
+
+/**
+ * editorial-hero: magazine asymmetric layout — large title left, image grid right
+ */
+function buildEditorialHero(preset: DAPreset, project: GeneratedProject, photos: string[]): string {
+  const { palette, typography } = preset
+  const { businessName, sector, city, copywriting } = project
+  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+
+  const img = (idx: number, h: string) => photos[idx]
+    ? `<img src="${photos[idx]}" alt="Visual" style="width:100%;height:${h};object-fit:cover;">`
+    : `<div style="width:100%;height:${h};background:${palette.gradient};opacity:${0.6 + idx * 0.1};display:flex;align-items:center;justify-content:center;font-size:3rem;">${preset.heroEmoji}</div>`
+
+  return `
+<!-- HERO — editorial-hero -->
+<section style="padding:80px 5%;min-height:92vh;display:flex;align-items:center;background:${palette.background};">
+  <div class="container" style="width:100%;display:grid;grid-template-columns:5fr 4fr;gap:48px;align-items:start;" class="hero-2col">
+    <div style="padding-top:20px;">
+      <div class="animate-on-scroll" style="display:flex;align-items:center;gap:12px;margin-bottom:28px;">
+        <div style="height:2px;width:48px;background:${palette.gradient};"></div>
+        <span style="color:${palette.muted};font-size:0.85rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;">${sector} · ${city}</span>
+      </div>
+      <h1 class="animate-on-scroll delay-1" style="font-family:${typography.heading};font-size:clamp(48px,6.5vw,90px);line-height:0.95;letter-spacing:-0.02em;color:${palette.text};margin-bottom:28px;">
+        ${businessName}<br>
+        <span style="background:${palette.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-style:italic;">Studio</span>
+      </h1>
+      <p class="animate-on-scroll delay-2" style="font-size:1.1rem;color:${palette.muted};line-height:1.75;max-width:480px;margin-bottom:36px;">${copywriting.heroSubtitle}</p>
+      <div class="animate-on-scroll delay-3" style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:48px;">
+        <a href="#contact" class="btn-primary btn-glow">${copywriting.ctaPrimary}</a>
+        <a href="#services" class="btn-secondary">${copywriting.ctaSecondary}</a>
+      </div>
+      <div class="animate-on-scroll delay-4" style="display:flex;gap:32px;">
+        <div><span class="count-up" data-target="200" data-suffix="+" style="font-family:${typography.heading};font-size:2rem;font-weight:800;color:${palette.primary};">200+</span><div style="color:${palette.muted};font-size:0.82rem;">Clients</div></div>
+        <div><span style="font-family:${typography.heading};font-size:2rem;font-weight:800;color:${palette.primary};">4.9★</span><div style="color:${palette.muted};font-size:0.82rem;">Google</div></div>
+        <div><span style="font-family:${typography.heading};font-size:2rem;font-weight:800;color:${palette.primary};">5 ans</span><div style="color:${palette.muted};font-size:0.82rem;">Expérience</div></div>
+      </div>
+    </div>
+    <div class="animate-on-scroll from-right" style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:240px 180px;gap:12px;">
+      <div style="border-radius:16px;overflow:hidden;grid-column:1/-1;">${img(0,'240px')}</div>
+      <div style="border-radius:16px;overflow:hidden;">${img(1,'180px')}</div>
+      <div style="border-radius:16px;overflow:hidden;background:${palette.gradient};display:flex;align-items:center;justify-content:center;">
+        <div style="text-align:center;color:white;padding:20px;"><div style="font-size:2.4rem;font-weight:800;font-family:${typography.heading};">✦</div><div style="font-size:0.85rem;font-weight:600;margin-top:8px;">Collection ${new Date().getFullYear()}</div></div>
+      </div>
+    </div>
+  </div>
+</section>`
+}
+
+/**
+ * luxury-fullscreen: full-screen background image, overlay, centered premium title
+ */
+function buildLuxuryFullscreen(preset: DAPreset, project: GeneratedProject, photos: string[]): string {
+  const { palette, typography } = preset
+  const { businessName, sector, city, copywriting } = project
+
+  const bg = photos[0]
+    ? `url('${photos[0]}') center/cover no-repeat`
+    : palette.gradient
+
+  return `
+<!-- HERO — luxury-fullscreen -->
+<section style="min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;background:${bg};text-align:center;">
+  <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,0.62) 0%,rgba(0,0,0,0.35) 100%);"></div>
+  <div style="position:relative;z-index:2;padding:40px 5%;">
+    <div class="animate-on-scroll" style="display:inline-block;border:1px solid rgba(255,255,255,0.3);padding:6px 20px;border-radius:30px;color:rgba(255,255,255,0.75);font-size:0.82rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:32px;">${sector} · ${city}</div>
+    <h1 class="animate-on-scroll delay-1" style="font-family:${typography.heading};font-size:clamp(48px,8vw,110px);line-height:0.92;letter-spacing:-0.02em;color:white;margin-bottom:24px;">
+      ${businessName}
+    </h1>
+    <p class="animate-on-scroll delay-2" style="font-size:1.2rem;color:rgba(255,255,255,0.75);max-width:600px;margin:0 auto 44px;line-height:1.7;">${copywriting.heroSubtitle}</p>
+    <div class="animate-on-scroll delay-3" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <a href="#contact" class="btn-primary btn-glow" style="background:white;color:${palette.primary};">${copywriting.ctaPrimary}</a>
+      <a href="#services" style="display:inline-flex;align-items:center;gap:8px;background:transparent;color:white;padding:14px 28px;border-radius:12px;font-weight:600;border:1.5px solid rgba(255,255,255,0.45);cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='white'" onmouseout="this.style.borderColor='rgba(255,255,255,0.45)'">${copywriting.ctaSecondary}</a>
+    </div>
+    <div class="animate-on-scroll delay-4" style="display:flex;gap:40px;justify-content:center;margin-top:64px;padding-top:40px;border-top:1px solid rgba(255,255,255,0.18);flex-wrap:wrap;">
+      <div style="color:white;"><div style="font-family:${typography.heading};font-size:2rem;font-weight:800;" class="count-up" data-target="200" data-suffix="+">200+</div><div style="font-size:0.85rem;opacity:0.65;">Clients</div></div>
+      <div style="color:white;"><div style="font-family:${typography.heading};font-size:2rem;font-weight:800;">4.9★</div><div style="font-size:0.85rem;opacity:0.65;">Note Google</div></div>
+      <div style="color:white;"><div style="font-family:${typography.heading};font-size:2rem;font-weight:800;">5 ans</div><div style="font-size:0.85rem;opacity:0.65;">Expérience</div></div>
+    </div>
+  </div>
+  <a href="#services" style="position:absolute;bottom:32px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.5);animation:float 2s ease-in-out infinite;font-size:1.6rem;cursor:pointer;">↓</a>
+</section>`
+}
+
+/**
+ * ecommerce-focus: product grid hero, benefits row, CTA
+ */
+function buildEcommerceFocus(preset: DAPreset, project: GeneratedProject, photos: string[]): string {
+  const { palette, typography } = preset
+  const { businessName, sector, city, copywriting, services } = project
+  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+
+  const productEmojis = ['🛍️','✨','📦','🎁','💎','🌟']
+  return `
+<!-- HERO — ecommerce-focus -->
+<section style="padding:60px 5% 80px;background:${palette.background};">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;margin-bottom:72px;" class="hero-2col">
+      <div>
+        <span class="badge animate-on-scroll">${sector} · ${city}</span>
+        <h1 class="animate-on-scroll delay-1" style="font-family:${typography.heading};font-size:clamp(34px,4.5vw,58px);line-height:1.1;margin:18px 0 20px;color:${palette.text};">${copywriting.heroTitle}</h1>
+        <p class="animate-on-scroll delay-2" style="font-size:1.1rem;color:${palette.muted};line-height:1.75;margin-bottom:32px;">${copywriting.heroSubtitle}</p>
+        <div class="animate-on-scroll delay-3" style="display:flex;gap:14px;flex-wrap:wrap;">
+          <a href="#services" class="btn-primary btn-glow">${copywriting.ctaPrimary}</a>
+          <a href="#contact" class="btn-secondary">${copywriting.ctaSecondary}</a>
+        </div>
+      </div>
+      <div class="animate-on-scroll from-right" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        ${services.slice(0,4).map((s, i) => `
+        <div class="card-3d" style="background:${isDark ? '#1a1a24' : 'white'};border-radius:18px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.08);">
+          <div style="height:140px;background:${palette.gradient};opacity:0.85;display:flex;align-items:center;justify-content:center;font-size:3rem;">${productEmojis[i % 6]}</div>
+          <div style="padding:14px;">
+            <div style="font-weight:700;color:${palette.text};font-size:0.9rem;margin-bottom:6px;">${s}</div>
+            <div style="font-weight:800;color:${palette.primary};">${39 + i * 20}€</div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+    <!-- Benefits bar -->
+    <div class="animate-on-scroll" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;">
+      ${['🚚 Livraison rapide','✅ Retours gratuits','🔒 Paiement sécurisé','⭐ 4.9/5 avis clients'].map((b) => `
+      <div style="background:${isDark ? '#1a1a24' : 'white'};border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:10px;font-weight:600;color:${palette.text};font-size:0.9rem;border:1px solid ${palette.primary}18;">
+        ${b}
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`
+}
+
+/**
+ * local-conversion: fast CTA bar at top, social proof strip, service cards, visible form
+ */
+function buildLocalConversion(preset: DAPreset, project: GeneratedProject, photos: string[]): string {
+  const { palette, typography } = preset
+  const { businessName, sector, city, copywriting, services } = project
+  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+
+  const heroImage = photos[0]
+    ? `<img src="${photos[0]}" alt="${businessName}" style="width:100%;height:100%;object-fit:cover;">`
+    : `<div style="width:100%;height:100%;background:${palette.gradient};display:flex;align-items:center;justify-content:center;font-size:5rem;">${preset.heroEmoji}</div>`
+
+  return `
+<!-- HERO — local-conversion -->
+<!-- Urgency / social proof bar -->
+<div style="background:${palette.gradient};color:white;text-align:center;padding:10px 5%;font-size:0.88rem;font-weight:600;">
+  ⭐ 4.9/5 — Plus de 200 clients satisfaits à ${city} · Devis gratuit sous 2h
+</div>
+<section style="padding:60px 5% 70px;background:${palette.background};">
+  <div class="container" style="display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:center;" class="hero-2col">
+    <div>
+      <h1 class="animate-on-scroll" style="font-family:${typography.heading};font-size:clamp(32px,4.5vw,56px);line-height:1.12;color:${palette.text};margin-bottom:18px;">
+        ${copywriting.heroTitle}
+      </h1>
+      <p class="animate-on-scroll delay-1" style="font-size:1.08rem;color:${palette.muted};line-height:1.75;margin-bottom:28px;">${copywriting.heroSubtitle}</p>
+      <!-- Quick contact bar -->
+      <div class="animate-on-scroll delay-2" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px;">
+        <a href="#contact" class="btn-primary btn-glow" style="animation:pulse-glow 2.5s ease-in-out infinite;">${copywriting.ctaPrimary}</a>
+        <a href="tel:0600000000" class="btn-secondary">📞 Appeler maintenant</a>
+      </div>
+      <!-- Trust badges -->
+      <div class="animate-on-scroll delay-3" style="display:flex;gap:16px;flex-wrap:wrap;">
+        ${['✓ Devis gratuit','✓ Intervention rapide','✓ Garantie travaux'].map((b) => `<span style="background:${palette.primary}14;color:${palette.primary};padding:6px 14px;border-radius:20px;font-size:0.82rem;font-weight:600;">${b}</span>`).join('')}
+      </div>
+    </div>
+    <div class="animate-on-scroll from-right" style="border-radius:20px;overflow:hidden;box-shadow:0 24px 64px ${palette.primary}28;aspect-ratio:4/3;">
+      ${heroImage}
+    </div>
+  </div>
+</section>`
+}
+
+/**
+ * event-portfolio: large visuals, portfolio grid, quote CTA
+ */
+function buildEventPortfolio(preset: DAPreset, project: GeneratedProject, photos: string[]): string {
+  const { palette, typography } = preset
+  const { businessName, sector, city, copywriting } = project
+  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+
+  const mainImage = photos[0]
+    ? `<img src="${photos[0]}" alt="${businessName}" style="width:100%;height:100%;object-fit:cover;">`
+    : `<div style="width:100%;height:100%;background:${palette.gradient};display:flex;align-items:center;justify-content:center;font-size:7rem;">${preset.heroEmoji}</div>`
+
+  const gridImages = [1,2,3].map((i) => photos[i]
+    ? `<img src="${photos[i]}" alt="Réalisation" style="width:100%;height:100%;object-fit:cover;">`
+    : `<div style="width:100%;height:100%;background:${palette.gradient};opacity:${0.5 + i * 0.15};display:flex;align-items:center;justify-content:center;font-size:3rem;">${preset.heroEmoji}</div>`
+  )
+
+  return `
+<!-- HERO — event-portfolio -->
+<section style="min-height:95vh;display:grid;grid-template-columns:1fr 1fr;background:${palette.background};" class="hero-2col">
+  <!-- Left: full-height image -->
+  <div style="position:relative;overflow:hidden;min-height:500px;">
+    ${mainImage}
+    <div style="position:absolute;inset:0;background:linear-gradient(to right,${palette.background}00,${palette.background}00);"></div>
+    <div style="position:absolute;bottom:40px;left:40px;right:40px;">
+      <div style="display:inline-block;background:${palette.primary};color:white;padding:6px 16px;border-radius:20px;font-size:0.82rem;font-weight:600;margin-bottom:14px;">${sector} · ${city}</div>
+    </div>
+  </div>
+  <!-- Right: content -->
+  <div style="padding:80px 5% 60px;display:flex;flex-direction:column;justify-content:center;background:${isDark ? '#18121e' : palette.surface};">
+    <h1 class="animate-on-scroll" style="font-family:${typography.heading};font-size:clamp(36px,4vw,60px);line-height:1.1;color:${palette.text};margin-bottom:20px;">
+      ${copywriting.heroTitle.split(' ').slice(0,3).join(' ')}<br>
+      <span style="background:${palette.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">${copywriting.heroTitle.split(' ').slice(3).join(' ')}</span>
+    </h1>
+    <p class="animate-on-scroll delay-1" style="font-size:1.05rem;color:${palette.muted};line-height:1.75;margin-bottom:36px;">${copywriting.heroSubtitle}</p>
+    <div class="animate-on-scroll delay-2" style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:44px;">
+      <a href="#contact" class="btn-primary btn-glow">${copywriting.ctaPrimary}</a>
+      <a href="#galerie" class="btn-secondary">${copywriting.ctaSecondary}</a>
+    </div>
+    <!-- Mini portfolio grid -->
+    <div class="animate-on-scroll delay-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-radius:14px;overflow:hidden;">
+      ${gridImages.map((img, i) => `<div style="aspect-ratio:1;overflow:hidden;">${img}</div>`).join('')}
+    </div>
+    <div class="animate-on-scroll delay-4" style="display:flex;gap:28px;margin-top:28px;padding-top:24px;border-top:1px solid ${isDark ? '#ffffff14' : '#0000000f'};">
+      <div><div style="font-family:${typography.heading};font-size:1.6rem;font-weight:800;color:${palette.primary};" class="count-up" data-target="150" data-suffix="+">150+</div><div style="color:${palette.muted};font-size:0.82rem;">Événements</div></div>
+      <div><div style="font-family:${typography.heading};font-size:1.6rem;font-weight:800;color:${palette.primary};">4.9★</div><div style="color:${palette.muted};font-size:0.82rem;">Avis Google</div></div>
+      <div><div style="font-family:${typography.heading};font-size:1.6rem;font-weight:800;color:${palette.primary};">8 ans</div><div style="color:${palette.muted};font-size:0.82rem;">D'expertise</div></div>
+    </div>
+  </div>
+</section>`
+}
+
+/**
+ * app-landing: hero with mockup/visual + feature cards + pricing strip
+ */
+function buildAppLanding(preset: DAPreset, project: GeneratedProject, photos: string[]): string {
+  const { palette, typography } = preset
+  const { businessName, sector, city, copywriting, services } = project
+  const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
+
+  const heroImage = photos[0]
+    ? `<img src="${photos[0]}" alt="${businessName}" style="width:100%;height:100%;object-fit:cover;border-radius:20px;">`
+    : `<div style="width:100%;height:100%;background:${palette.gradient};border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:6rem;">${preset.heroEmoji}</div>`
+
+  const featureIcons = ['⚡','🎯','🔥','💡','📈','🛡️']
+  return `
+<!-- HERO — app-landing -->
+<section style="padding:90px 5% 70px;background:radial-gradient(ellipse 800px 600px at 50% -100px,${palette.primary}18,transparent),${palette.background};">
+  <div class="container" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;" class="hero-2col">
+    <div>
+      <div class="animate-on-scroll" style="display:inline-flex;align-items:center;gap:8px;background:${palette.primary}18;color:${palette.primary};padding:7px 16px;border-radius:20px;font-size:0.82rem;font-weight:700;margin-bottom:24px;">
+        <span style="width:7px;height:7px;background:${palette.primary};border-radius:50%;animation:pulse-glow 1.5s infinite;"></span>
+        ${sector} — ${city}
+      </div>
+      <h1 class="animate-on-scroll delay-1" style="font-family:${typography.heading};font-size:clamp(36px,5vw,64px);line-height:1.1;color:${palette.text};margin-bottom:20px;">
+        ${copywriting.heroTitle.split(' ').slice(0,3).join(' ')}<br>
+        <span style="background:${palette.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">${copywriting.heroTitle.split(' ').slice(3).join(' ')}</span>
+      </h1>
+      <p class="animate-on-scroll delay-2" style="font-size:1.1rem;color:${palette.muted};line-height:1.75;margin-bottom:36px;">${copywriting.heroSubtitle}</p>
+      <div class="animate-on-scroll delay-3" style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:44px;">
+        <a href="#contact" class="btn-primary btn-glow">${copywriting.ctaPrimary}</a>
+        <a href="#services" class="btn-secondary">${copywriting.ctaSecondary}</a>
+      </div>
+      <div class="animate-on-scroll delay-4" style="display:flex;gap:28px;padding-top:28px;border-top:1px solid ${isDark ? '#ffffff14' : '#0000000f'};flex-wrap:wrap;">
+        <div><div class="count-up" data-target="200" data-suffix="+" style="font-family:${typography.heading};font-size:1.8rem;font-weight:800;color:${palette.primary};">200+</div><div style="color:${palette.muted};font-size:0.82rem;">Clients</div></div>
+        <div><div style="font-family:${typography.heading};font-size:1.8rem;font-weight:800;color:${palette.primary};">4.9★</div><div style="color:${palette.muted};font-size:0.82rem;">Note</div></div>
+        <div><div style="font-family:${typography.heading};font-size:1.8rem;font-weight:800;color:${palette.primary};">5 ans</div><div style="color:${palette.muted};font-size:0.82rem;">Expérience</div></div>
+      </div>
+    </div>
+    <div class="animate-on-scroll from-right" style="aspect-ratio:4/3;animation:float 4s ease-in-out infinite;">
+      ${heroImage}
+    </div>
+  </div>
+</section>
+<!-- Feature cards -->
+<section style="padding:60px 5%;background:${isDark ? '#111118' : palette.surface};">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+      ${services.slice(0,6).map((s, i) => `
+      <div class="card-3d animate-on-scroll delay-${(i%4)+1}" style="background:${isDark ? '#1a1a24' : 'white'};border-radius:16px;padding:26px;border:1px solid ${palette.primary}18;">
+        <div style="font-size:1.8rem;margin-bottom:12px;">${featureIcons[i % 6]}</div>
+        <h3 style="font-family:${typography.heading};color:${palette.text};margin-bottom:8px;font-size:1rem;">${s}</h3>
+        <p style="color:${palette.muted};font-size:0.87rem;line-height:1.6;">Solution professionnelle adaptée à vos besoins spécifiques.</p>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`
+}
+
+// ─── Main HTML generator ──────────────────────────────────────────────────────
 
 export function generateHTMLSite(project: GeneratedProject, photos: string[]): string {
   const { designSystem, copywriting, seo, sector, businessName, city, services, automationNeeds, ecommerceNeeds } = project
-  const { palette } = designSystem
+
+  // Pick the DA preset based on sector + style
+  const preset = selectDAPreset(sector, project.style ?? '', '')
+  const { palette, typography } = preset
   const isDark = palette.background.startsWith('#0') || palette.background.startsWith('#1')
-  const fontUrl = isDark
-    ? 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap'
-    : 'https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap'
-  const headingFont = isDark ? "'Playfair Display', serif" : "'Syne', sans-serif"
-  const bodyFont = "'DM Sans', sans-serif"
 
-  const heroImage = photos.length > 0
-    ? `<img src="${photos[0]}" alt="Hero" style="width:100%;height:100%;object-fit:cover;border-radius:20px;">`
-    : `<div style="width:100%;height:100%;background:linear-gradient(135deg,${palette.primary}22,${palette.secondary}22);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:5rem;">
-        ${sector === 'beauté' ? '💆' : sector === 'restaurant' ? '🍽️' : sector === 'événementiel' ? '🎊' : sector === 'automobile' ? '🚗' : sector === 'fitness' ? '💪' : sector === 'coaching' ? '🎯' : '✨'}
-      </div>`
-
-  const galleryHtml = photos.length > 1
-    ? photos.slice(1).map((p, i) => `<div style="border-radius:12px;overflow:hidden;aspect-ratio:1;"><img src="${p}" alt="Photo ${i + 2}" style="width:100%;height:100%;object-fit:cover;"></div>`).join('')
-    : ['#f0f0f0', '#e8e8e8', '#f8f8f8', '#efefef'].map((c, i) => `<div style="background:${c};border-radius:12px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:2rem;color:#ccc;">📸</div>`).join('')
+  // Build hero by layout type
+  let heroSection = ''
+  switch (preset.layout) {
+    case 'split-hero':        heroSection = buildSplitHero(preset, project, photos); break
+    case 'centered-hero':     heroSection = buildCenteredHero(preset, project, photos); break
+    case 'editorial-hero':    heroSection = buildEditorialHero(preset, project, photos); break
+    case 'luxury-fullscreen': heroSection = buildLuxuryFullscreen(preset, project, photos); break
+    case 'ecommerce-focus':   heroSection = buildEcommerceFocus(preset, project, photos); break
+    case 'local-conversion':  heroSection = buildLocalConversion(preset, project, photos); break
+    case 'event-portfolio':   heroSection = buildEventPortfolio(preset, project, photos); break
+    case 'app-landing':       heroSection = buildAppLanding(preset, project, photos); break
+    default:                  heroSection = buildSplitHero(preset, project, photos)
+  }
 
   const automationSection = automationNeeds.length > 0 ? `
-  <section style="padding:80px 5%;background:${isDark ? '#111' : '#f8f8ff'};">
-    <div style="max-width:1100px;margin:0 auto;">
-      <div style="text-align:center;margin-bottom:48px;">
-        <span style="background:linear-gradient(135deg,${palette.primary},${palette.secondary});color:white;padding:6px 16px;border-radius:20px;font-size:0.85rem;font-weight:600;">IA Powered</span>
-        <h2 style="font-family:${headingFont};font-size:clamp(28px,4vw,42px);color:${palette.text};margin-top:16px;">Automatisez votre croissance</h2>
-        <p style="color:${palette.muted};max-width:600px;margin:0 auto;">Des systèmes intelligents qui travaillent pour vous, même quand vous dormez.</p>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;">
-        ${automationNeeds.map((a) => `
-        <div style="background:${isDark ? '#1a1a1a' : 'white'};border:1px solid ${palette.primary}33;border-radius:16px;padding:28px;transition:transform 0.2s;">
-          <div style="font-size:2rem;margin-bottom:12px;">🤖</div>
-          <span style="background:${palette.primary}22;color:${palette.primary};padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;">Nouveau</span>
-          <h3 style="font-family:${headingFont};color:${palette.text};margin:12px 0 8px;">${a}</h3>
-          <p style="color:${palette.muted};font-size:0.9rem;">Système automatisé qui génère des résultats sans intervention manuelle.</p>
-        </div>`).join('')}
-      </div>
+<section style="padding:90px 5%;background:${isDark ? '#111118' : '#f8f8ff'};">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:52px;" class="animate-on-scroll">
+      <span class="badge">IA Powered</span>
+      <h2 class="section-title" style="margin-top:16px;">Automatisez votre croissance</h2>
+      <p class="section-sub">Des systèmes intelligents qui travaillent pour vous, même quand vous dormez.</p>
     </div>
-  </section>` : ''
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;">
+      ${automationNeeds.map((a, i) => `
+      <div class="card-3d animate-on-scroll delay-${i+1}" style="background:${isDark ? '#1a1a24' : 'white'};border:1px solid ${palette.primary}28;border-radius:18px;padding:30px;">
+        <div style="font-size:2rem;margin-bottom:12px;">🤖</div>
+        <span style="background:${palette.primary}20;color:${palette.primary};padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;">Nouveau</span>
+        <h3 style="font-family:${typography.heading};color:${palette.text};margin:14px 0 8px;">${a}</h3>
+        <p style="color:${palette.muted};font-size:0.9rem;line-height:1.6;">Système automatisé qui génère des résultats sans intervention manuelle.</p>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>` : ''
 
   const ecommerceSection = ecommerceNeeds.length > 0 ? `
-  <section style="padding:80px 5%;background:${isDark ? '#0a0a0a' : '#fffaf3'};">
-    <div style="max-width:1100px;margin:0 auto;">
-      <h2 style="font-family:${headingFont};font-size:clamp(28px,4vw,42px);color:${palette.text};text-align:center;margin-bottom:48px;">Notre boutique</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;">
-        ${['Produit Premium A', 'Produit Exclusif B', 'Pack Découverte C', 'Offre Spéciale D'].map((p, i) => `
-        <div style="background:${isDark ? '#1a1a1a' : 'white'};border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.06);">
-          <div style="height:180px;background:linear-gradient(135deg,${palette.primary}22,${palette.secondary}22);display:flex;align-items:center;justify-content:center;font-size:3rem;">
-            ${['🛍️', '✨', '📦', '🎁'][i]}
-          </div>
-          <div style="padding:16px;">
-            <span style="background:#55c47a22;color:#55c47a;font-size:0.75rem;padding:2px 8px;border-radius:20px;">En stock</span>
-            <h3 style="font-family:${headingFont};color:${palette.text};margin:8px 0 4px;font-size:1rem;">${p}</h3>
-            <p style="color:${palette.muted};font-size:0.85rem;margin-bottom:12px;">Description courte du produit avec ses avantages clés.</p>
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-weight:700;color:${palette.primary};font-size:1.1rem;">${29 + i * 10}€</span>
-              <button style="background:linear-gradient(135deg,${palette.primary},${palette.secondary});color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.85rem;">Ajouter</button>
-            </div>
-          </div>
-        </div>`).join('')}
-      </div>
+<section style="padding:90px 5%;background:${isDark ? '#0a0a12' : '#fffaf3'};">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:52px;" class="animate-on-scroll">
+      <span class="badge">Boutique</span>
+      <h2 class="section-title" style="margin-top:16px;">Notre boutique</h2>
     </div>
-  </section>` : ''
-
-  const faqItems = copywriting.faq.map((f, i) => `
-  <div class="faq-item" style="border-bottom:1px solid ${isDark ? '#333' : '#e8e0d5'};">
-    <button onclick="toggleFaq(${i})" style="width:100%;text-align:left;padding:20px 0;background:none;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-family:${headingFont};font-size:1rem;color:${palette.text};font-weight:600;">
-      ${f.question}
-      <span id="faq-icon-${i}" style="font-size:1.4rem;color:${palette.primary};transition:transform 0.3s;">+</span>
-    </button>
-    <div id="faq-answer-${i}" style="display:none;padding-bottom:20px;color:${palette.muted};line-height:1.7;">${f.answer}</div>
-  </div>`).join('')
-
-  const testimonialCards = copywriting.testimonials.map((t) => `
-  <div style="background:${isDark ? '#1a1a1a' : 'white'};border-radius:16px;padding:28px;box-shadow:0 2px 16px rgba(0,0,0,0.06);">
-    <div style="color:#ffbe2e;font-size:1.2rem;margin-bottom:12px;">${'⭐'.repeat(t.rating)}</div>
-    <p style="color:${palette.muted};line-height:1.7;margin-bottom:16px;font-style:italic;">"${t.content}"</p>
-    <div style="border-top:1px solid ${isDark ? '#333' : '#e8e0d5'};padding-top:16px;">
-      <div style="font-weight:700;color:${palette.text};">${t.name}</div>
-      <div style="color:${palette.muted};font-size:0.85rem;">${t.role}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;">
+      ${['Produit Premium A','Produit Exclusif B','Pack Découverte C','Offre Spéciale D'].map((p, i) => `
+      <div class="card-3d animate-on-scroll delay-${i+1}" style="background:${isDark ? '#1a1a24' : 'white'};border-radius:18px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.07);">
+        <div style="height:180px;background:${palette.gradient};opacity:0.85;display:flex;align-items:center;justify-content:center;font-size:3.5rem;">${['🛍️','✨','📦','🎁'][i]}</div>
+        <div style="padding:18px;">
+          <span style="background:#22c55e20;color:#22c55e;font-size:0.75rem;padding:2px 8px;border-radius:20px;font-weight:600;">En stock</span>
+          <h3 style="font-family:${typography.heading};color:${palette.text};margin:10px 0 6px;font-size:1rem;">${p}</h3>
+          <p style="color:${palette.muted};font-size:0.85rem;margin-bottom:14px;line-height:1.5;">Description courte avec ses avantages clés.</p>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-weight:800;color:${palette.primary};font-size:1.15rem;">${29 + i * 10}€</span>
+            <button class="btn-primary btn-glow" style="padding:8px 16px;font-size:0.85rem;border-radius:8px;">Ajouter</button>
+          </div>
+        </div>
+      </div>`).join('')}
     </div>
-  </div>`).join('')
+  </div>
+</section>` : ''
+
+  // Problem section
+  const problemSection = `
+<section style="padding:90px 5%;background:${isDark ? '#111118' : palette.surfaceAlt ?? '#fff8ee'};">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:52px;" class="animate-on-scroll">
+      <span class="badge">Le défi</span>
+      <h2 class="section-title" style="margin-top:16px;">Vous reconnaissez-vous ?</h2>
+      <p class="section-sub">Ces défis freinent la croissance de nombreux professionnels du secteur.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
+      ${getPainPoints(sector).map((p, i) => `
+      <div class="animate-on-scroll delay-${i+1}" style="background:${isDark ? '#1a1a24' : 'white'};border:1px solid #ff5a1f22;border-radius:18px;padding:30px;border-left:4px solid #ef4444;">
+        <div style="font-size:2rem;margin-bottom:14px;">❌</div>
+        <p style="color:${palette.text};font-weight:500;line-height:1.65;">${p}</p>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -345,286 +1032,38 @@ export function generateHTMLSite(project: GeneratedProject, photos: string[]): s
   <meta property="og:description" content="${seo.description}">
   <meta name="theme-color" content="${palette.primary}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="${fontUrl}" rel="stylesheet">
+  <link href="${typography.googleFontUrl}" rel="stylesheet">
   <style>
-    *{box-sizing:border-box;margin:0;padding:0;}
-    html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;}
-    body{background:${palette.background};color:${palette.text};font-family:${bodyFont};line-height:1.6;}
-    a{color:inherit;text-decoration:none;}
-    .container{max-width:1100px;margin:0 auto;padding:0 5%;}
-    .btn-primary{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,${palette.primary},${palette.secondary});color:white;padding:14px 28px;border-radius:12px;font-weight:700;font-family:${headingFont};border:none;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 16px ${palette.primary}44;font-size:1rem;}
-    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px ${palette.primary}66;}
-    .btn-secondary{display:inline-flex;align-items:center;gap:8px;background:transparent;color:${palette.text};padding:14px 28px;border-radius:12px;font-weight:600;font-family:${headingFont};border:1.5px solid ${isDark ? '#444' : '#e8e0d5'};cursor:pointer;transition:all 0.2s;font-size:1rem;}
-    .btn-secondary:hover{border-color:${palette.primary};color:${palette.primary};transform:translateY(-1px);}
-    @media(max-width:768px){.hide-mobile{display:none!important;}.grid-2{grid-template-columns:1fr!important;}.hero-grid{grid-template-columns:1fr!important;}}
-    @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
-    .fade-in{animation:fadeIn 0.6s ease-out forwards;}
+    ${getSharedCSS(preset)}
   </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<header style="position:sticky;top:0;z-index:100;background:${palette.background}cc;backdrop-filter:blur(12px);border-bottom:1px solid ${isDark ? '#333' : '#e8e0d5'};padding:16px 5%;">
-  <div style="max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;">
-    <a href="#" style="font-family:${headingFont};font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,${palette.primary},${palette.secondary});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">${businessName}</a>
-    <nav style="display:flex;gap:32px;align-items:center;" class="hide-mobile">
-      <a href="#services" style="color:${palette.muted};font-weight:500;transition:color 0.2s;" onmouseover="this.style.color='${palette.primary}'" onmouseout="this.style.color='${palette.muted}'">Services</a>
-      <a href="#galerie" style="color:${palette.muted};font-weight:500;transition:color 0.2s;" onmouseover="this.style.color='${palette.primary}'" onmouseout="this.style.color='${palette.muted}'">Galerie</a>
-      <a href="#avis" style="color:${palette.muted};font-weight:500;transition:color 0.2s;" onmouseover="this.style.color='${palette.primary}'" onmouseout="this.style.color='${palette.muted}'">Avis</a>
-      <a href="#contact" style="color:${palette.muted};font-weight:500;transition:color 0.2s;" onmouseover="this.style.color='${palette.primary}'" onmouseout="this.style.color='${palette.muted}'">Contact</a>
-    </nav>
-    <a href="#contact" class="btn-primary" style="padding:10px 20px;font-size:0.9rem;">${copywriting.ctaPrimary.replace(' →', '')}</a>
-  </div>
-</header>
+${buildHeader(preset, businessName, copywriting.ctaPrimary, services)}
 
-<!-- HERO -->
-<section style="padding:80px 5% 60px;min-height:90vh;display:flex;align-items:center;background:radial-gradient(ellipse 800px 600px at 60% 40%, ${palette.primary}11, transparent),radial-gradient(ellipse 600px 400px at 20% 80%, ${palette.secondary}0d, transparent);">
-  <div style="max-width:1100px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;" class="hero-grid">
-    <div class="fade-in">
-      <span style="display:inline-block;background:linear-gradient(135deg,${palette.primary},${palette.secondary});color:white;padding:6px 16px;border-radius:20px;font-size:0.85rem;font-weight:600;margin-bottom:24px;">✦ ${sector.charAt(0).toUpperCase() + sector.slice(1)} · ${city}</span>
-      <h1 style="font-family:${headingFont};font-size:clamp(36px,5vw,64px);line-height:1.15;margin-bottom:20px;color:${palette.text};">
-        ${copywriting.heroTitle.replace(/([^.!?]+)$/, `<span style="background:linear-gradient(135deg,${palette.primary},${palette.secondary});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">$1</span>`)}
-      </h1>
-      <p style="font-size:1.15rem;color:${palette.muted};line-height:1.7;margin-bottom:36px;max-width:520px;">${copywriting.heroSubtitle}</p>
-      <div style="display:flex;gap:16px;flex-wrap:wrap;">
-        <a href="#contact" class="btn-primary">${copywriting.ctaPrimary}</a>
-        <a href="#services" class="btn-secondary">${copywriting.ctaSecondary}</a>
-      </div>
-      <div style="display:flex;gap:32px;margin-top:40px;padding-top:32px;border-top:1px solid ${isDark ? '#333' : '#e8e0d5'};">
-        <div><div style="font-family:${headingFont};font-size:1.8rem;font-weight:800;color:${palette.primary};">200+</div><div style="color:${palette.muted};font-size:0.85rem;">Clients satisfaits</div></div>
-        <div><div style="font-family:${headingFont};font-size:1.8rem;font-weight:800;color:${palette.primary};">4.9★</div><div style="color:${palette.muted};font-size:0.85rem;">Note Google</div></div>
-        <div><div style="font-family:${headingFont};font-size:1.8rem;font-weight:800;color:${palette.primary};">5 ans</div><div style="color:${palette.muted};font-size:0.85rem;">D'expérience</div></div>
-      </div>
-    </div>
-    <div style="animation:float 3s ease-in-out infinite;border-radius:20px;overflow:hidden;box-shadow:0 24px 64px ${palette.primary}33;aspect-ratio:4/3;">
-      ${heroImage}
-    </div>
-  </div>
-</section>
+${heroSection}
 
-<!-- PROBLÈME -->
-<section style="padding:80px 5%;background:${isDark ? '#111' : '#fff8ee'};">
-  <div class="container">
-    <div style="text-align:center;margin-bottom:48px;">
-      <h2 style="font-family:${headingFont};font-size:clamp(24px,4vw,40px);color:${palette.text};">Vous reconnaissez-vous ?</h2>
-      <p style="color:${palette.muted};max-width:600px;margin:12px auto 0;">Ces défis freinent la croissance de nombreux ${sector === 'général' ? 'commerces' : `commerces ${sector}`}.</p>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
-      ${getPainPoints(sector).map((p) => `
-      <div style="background:${isDark ? '#1a1a1a' : 'white'};border:1px solid #ff5a1f22;border-radius:16px;padding:28px;border-left:4px solid #ff5a1f;">
-        <div style="font-size:1.8rem;margin-bottom:12px;">❌</div>
-        <p style="color:${palette.text};font-weight:500;line-height:1.6;">${p}</p>
-      </div>`).join('')}
-    </div>
-  </div>
-</section>
+${problemSection}
 
-<!-- SOLUTION -->
-<section style="padding:80px 5%;">
-  <div class="container">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;" class="grid-2">
-      <div>
-        <span style="background:${palette.primary}22;color:${palette.primary};padding:4px 12px;border-radius:20px;font-size:0.85rem;font-weight:600;">La solution</span>
-        <h2 style="font-family:${headingFont};font-size:clamp(24px,4vw,40px);color:${palette.text};margin:16px 0 20px;">Pourquoi choisir ${businessName} ?</h2>
-        <p style="color:${palette.muted};line-height:1.7;margin-bottom:28px;">${copywriting.heroSubtitle}</p>
-        <div style="display:flex;flex-direction:column;gap:14px;">
-          ${['Expertise reconnue dans le secteur', 'Service personnalisé et à l\'écoute', 'Résultats garantis ou remboursé', 'Réponse sous 2h garantie', 'Équipe de professionnels certifiés'].map((v) => `
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:24px;height:24px;background:${palette.primary}22;border-radius:50%;display:flex;align-items:center;justify-content:center;color:${palette.primary};font-weight:700;flex-shrink:0;">✓</div>
-            <span style="color:${palette.text};">${v}</span>
-          </div>`).join('')}
-        </div>
-        <div style="margin-top:32px;">
-          <a href="#contact" class="btn-primary">${copywriting.ctaPrimary}</a>
-        </div>
-      </div>
-      <div style="background:linear-gradient(135deg,${palette.primary}11,${palette.secondary}11);border-radius:20px;padding:40px;border:1px solid ${palette.primary}22;">
-        <div style="font-size:4rem;text-align:center;margin-bottom:20px;">⭐</div>
-        <p style="font-family:${headingFont};font-size:1.3rem;color:${palette.text};text-align:center;font-style:italic;">"${businessName} a complètement transformé notre façon de travailler. Un service exceptionnel."</p>
-        <p style="color:${palette.muted};text-align:center;margin-top:16px;">— Client Premium</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- SERVICES -->
-<section id="services" style="padding:80px 5%;background:${isDark ? '#111' : '#fffaf3'};">
-  <div class="container">
-    <div style="text-align:center;margin-bottom:48px;">
-      <h2 style="font-family:${headingFont};font-size:clamp(24px,4vw,40px);color:${palette.text};">Nos services</h2>
-      <p style="color:${palette.muted};max-width:600px;margin:12px auto 0;">Une gamme complète de services adaptés à vos besoins.</p>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
-      ${services.map((s, i) => `
-      <div style="background:${isDark ? '#1a1a1a' : 'white'};border-radius:16px;padding:28px;box-shadow:0 2px 16px rgba(0,0,0,0.06);transition:all 0.2s;cursor:pointer;" onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 40px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 16px rgba(0,0,0,0.06)'">
-        <div style="font-size:2rem;margin-bottom:12px;">${['✂️','💅','🌿','💆','🪄','⭐','🎯','💎','🔥','✨','🎊','🌟'][i % 12]}</div>
-        <h3 style="font-family:${headingFont};color:${palette.text};margin-bottom:8px;">${s}</h3>
-        <p style="color:${palette.muted};font-size:0.9rem;line-height:1.6;">Service professionnel réalisé par nos experts avec des produits de qualité supérieure.</p>
-        <div style="margin-top:16px;font-weight:700;color:${palette.primary};">${30 + i * 15}€ <span style="font-weight:400;color:${palette.muted};font-size:0.85rem;">/ session</span></div>
-      </div>`).join('')}
-    </div>
-  </div>
-</section>
+${buildServicesSection(preset, services)}
 
 ${automationSection}
 ${ecommerceSection}
 
-<!-- GALERIE -->
-<section id="galerie" style="padding:80px 5%;background:${isDark ? '#0a0a0a' : '#fff8ee'};">
-  <div class="container">
-    <div style="text-align:center;margin-bottom:48px;">
-      <h2 style="font-family:${headingFont};font-size:clamp(24px,4vw,40px);color:${palette.text};">Nos réalisations</h2>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
-      ${galleryHtml}
-    </div>
-  </div>
-</section>
+${buildGallerySection(preset, photos)}
 
-<!-- AVIS -->
-<section id="avis" style="padding:80px 5%;">
-  <div class="container">
-    <div style="text-align:center;margin-bottom:48px;">
-      <h2 style="font-family:${headingFont};font-size:clamp(24px,4vw,40px);color:${palette.text};">Ce que disent nos clients</h2>
-      <p style="color:${palette.muted};font-size:0.85rem;margin-top:8px;">Exemples d'avis représentatifs</p>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
-      ${testimonialCards}
-    </div>
-  </div>
-</section>
+${buildTestimonialsSection(preset, copywriting.testimonials)}
 
-<!-- FAQ -->
-<section style="padding:80px 5%;background:${isDark ? '#111' : '#fffaf3'};">
-  <div style="max-width:720px;margin:0 auto;">
-    <h2 style="font-family:${headingFont};font-size:clamp(24px,4vw,40px);color:${palette.text};text-align:center;margin-bottom:48px;">Questions fréquentes</h2>
-    <div>${faqItems}</div>
-  </div>
-</section>
+${buildFAQSection(preset, copywriting.faq)}
 
-<!-- CONTACT / FORMULAIRE -->
-<section id="contact" style="padding:80px 5%;background:${isDark ? '#0a0a0a' : '#fff8ee'};">
-  <div style="max-width:640px;margin:0 auto;">
-    <div style="text-align:center;margin-bottom:40px;">
-      <h2 style="font-family:${headingFont};font-size:clamp(24px,4vw,40px);color:${palette.text};">Contactez-nous</h2>
-      <p style="color:${palette.muted};margin-top:8px;">Réponse garantie sous 2h en jours ouvrés.</p>
-    </div>
-    <form onsubmit="submitForm(event)" style="background:${isDark ? '#1a1a1a' : 'white'};border-radius:20px;padding:40px;box-shadow:0 4px 32px rgba(0,0,0,0.08);">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;" class="grid-2">
-        <div style="position:relative;">
-          <label style="position:absolute;top:-10px;left:12px;background:${isDark ? '#1a1a1a' : 'white'};padding:0 4px;font-size:0.8rem;color:${palette.primary};font-weight:600;">Prénom & Nom *</label>
-          <input required type="text" placeholder="Marie Dupont" style="width:100%;padding:14px;border:1.5px solid ${isDark ? '#333' : '#e8e0d5'};border-radius:10px;background:transparent;color:${palette.text};font-family:${bodyFont};font-size:1rem;outline:none;transition:border 0.2s;" onfocus="this.style.borderColor='${palette.primary}'" onblur="this.style.borderColor='${isDark ? '#333' : '#e8e0d5'}'">
-        </div>
-        <div style="position:relative;">
-          <label style="position:absolute;top:-10px;left:12px;background:${isDark ? '#1a1a1a' : 'white'};padding:0 4px;font-size:0.8rem;color:${palette.primary};font-weight:600;">Téléphone *</label>
-          <input required type="tel" placeholder="06 00 00 00 00" style="width:100%;padding:14px;border:1.5px solid ${isDark ? '#333' : '#e8e0d5'};border-radius:10px;background:transparent;color:${palette.text};font-family:${bodyFont};font-size:1rem;outline:none;" onfocus="this.style.borderColor='${palette.primary}'" onblur="this.style.borderColor='${isDark ? '#333' : '#e8e0d5'}'">
-        </div>
-      </div>
-      <div style="position:relative;margin-bottom:20px;">
-        <label style="position:absolute;top:-10px;left:12px;background:${isDark ? '#1a1a1a' : 'white'};padding:0 4px;font-size:0.8rem;color:${palette.primary};font-weight:600;">Email *</label>
-        <input required type="email" placeholder="marie@email.com" style="width:100%;padding:14px;border:1.5px solid ${isDark ? '#333' : '#e8e0d5'};border-radius:10px;background:transparent;color:${palette.text};font-family:${bodyFont};font-size:1rem;outline:none;" onfocus="this.style.borderColor='${palette.primary}'" onblur="this.style.borderColor='${isDark ? '#333' : '#e8e0d5'}'">
-      </div>
-      <div style="position:relative;margin-bottom:20px;">
-        <label style="position:absolute;top:-10px;left:12px;background:${isDark ? '#1a1a1a' : 'white'};padding:0 4px;font-size:0.8rem;color:${palette.primary};font-weight:600;">Type de besoin</label>
-        <select style="width:100%;padding:14px;border:1.5px solid ${isDark ? '#333' : '#e8e0d5'};border-radius:10px;background:${isDark ? '#1a1a1a' : 'white'};color:${palette.muted};font-family:${bodyFont};font-size:1rem;outline:none;appearance:none;">
-          ${services.slice(0, 4).map((s) => `<option>${s}</option>`).join('')}
-          <option>Autre demande</option>
-        </select>
-      </div>
-      <div style="position:relative;margin-bottom:28px;">
-        <label style="position:absolute;top:-10px;left:12px;background:${isDark ? '#1a1a1a' : 'white'};padding:0 4px;font-size:0.8rem;color:${palette.primary};font-weight:600;">Votre message</label>
-        <textarea placeholder="Décrivez votre projet ou votre besoin..." rows="4" style="width:100%;padding:14px;border:1.5px solid ${isDark ? '#333' : '#e8e0d5'};border-radius:10px;background:transparent;color:${palette.text};font-family:${bodyFont};font-size:1rem;outline:none;resize:vertical;" onfocus="this.style.borderColor='${palette.primary}'" onblur="this.style.borderColor='${isDark ? '#333' : '#e8e0d5'}'"></textarea>
-      </div>
-      <button type="submit" style="width:100%;background:linear-gradient(135deg,${palette.primary},${palette.secondary});color:white;padding:16px;border-radius:12px;border:none;cursor:pointer;font-family:${headingFont};font-size:1.1rem;font-weight:700;transition:all 0.2s;box-shadow:0 4px 16px ${palette.primary}44;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-        ${copywriting.ctaPrimary}
-      </button>
-      <p id="form-success" style="display:none;text-align:center;color:#55c47a;margin-top:16px;font-weight:600;">✓ Message envoyé ! Nous vous répondons sous 2h.</p>
-    </form>
-  </div>
-</section>
+${buildContactSection(preset, copywriting.ctaPrimary, services)}
 
-<!-- FOOTER -->
-<footer style="background:${isDark ? '#050505' : '#171717'};color:#e5e5e5;padding:64px 5% 32px;">
-  <div class="container">
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px;" class="grid-2">
-      <div>
-        <div style="font-family:${headingFont};font-size:1.5rem;font-weight:800;background:linear-gradient(135deg,${palette.primary},${palette.secondary});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;">${businessName}</div>
-        <p style="color:#9ca3af;line-height:1.7;max-width:280px;margin-bottom:24px;">Votre expert ${sector} à ${city}. Qualité, professionnalisme et satisfaction garantis.</p>
-        <div style="display:flex;gap:16px;">
-          ${['Instagram', 'Facebook', 'TikTok'].map((s) => `<a href="#" style="width:36px;height:36px;background:#ffffff11;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:0.75rem;transition:all 0.2s;" onmouseover="this.style.background='${palette.primary}';this.style.color='white'" onmouseout="this.style.background='#ffffff11';this.style.color='#9ca3af'">${s[0]}</a>`).join('')}
-        </div>
-      </div>
-      <div>
-        <div style="font-family:${headingFont};font-weight:700;margin-bottom:16px;color:white;">Services</div>
-        ${services.slice(0, 4).map((s) => `<a href="#services" style="display:block;color:#9ca3af;margin-bottom:8px;font-size:0.9rem;transition:color 0.2s;" onmouseover="this.style.color='${palette.primary}'" onmouseout="this.style.color='#9ca3af'">${s}</a>`).join('')}
-      </div>
-      <div>
-        <div style="font-family:${headingFont};font-weight:700;margin-bottom:16px;color:white;">Navigation</div>
-        ${['Accueil', 'Services', 'Galerie', 'Avis', 'Contact'].map((n) => `<a href="#${n.toLowerCase()}" style="display:block;color:#9ca3af;margin-bottom:8px;font-size:0.9rem;transition:color 0.2s;" onmouseover="this.style.color='${palette.primary}'" onmouseout="this.style.color='#9ca3af'">${n}</a>`).join('')}
-      </div>
-      <div>
-        <div style="font-family:${headingFont};font-weight:700;margin-bottom:16px;color:white;">Contact</div>
-        <div style="color:#9ca3af;font-size:0.9rem;line-height:2;">
-          <div>📍 ${city}, France</div>
-          <div>📞 06 00 00 00 00</div>
-          <div>✉️ contact@${businessName.toLowerCase().replace(/\s/g, '')}.fr</div>
-        </div>
-      </div>
-    </div>
-    <div style="border-top:1px solid #ffffff11;padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-      <p style="color:#6b7280;font-size:0.85rem;">© ${new Date().getFullYear()} ${businessName}. Tous droits réservés.</p>
-      <div style="display:flex;gap:24px;">
-        <a href="#" style="color:#6b7280;font-size:0.85rem;transition:color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">Mentions légales</a>
-        <a href="#" style="color:#6b7280;font-size:0.85rem;transition:color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">CGV</a>
-        <a href="#" style="color:#6b7280;font-size:0.85rem;transition:color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">Confidentialité</a>
-      </div>
-    </div>
-  </div>
-</footer>
+${buildFooter(preset, businessName, city, sector, services)}
 
-<!-- WhatsApp FAB -->
-${automationNeeds.includes('WhatsApp Business') ? `<a href="https://wa.me/33600000000" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;background:#25d366;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;box-shadow:0 4px 16px rgba(37,211,102,0.4);z-index:9999;transition:all 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform=''">💬</a>` : ''}
+${automationNeeds.includes('WhatsApp Business') ? `<a href="https://wa.me/33600000000" style="position:fixed;bottom:24px;right:24px;width:58px;height:58px;background:#25d366;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;box-shadow:0 4px 16px rgba(37,211,102,0.45);z-index:9999;transition:all 0.2s;text-decoration:none;" onmouseover="this.style.transform='scale(1.12)'" onmouseout="this.style.transform=''">💬</a>` : ''}
 
 <script>
-  function toggleFaq(i) {
-    const ans = document.getElementById('faq-answer-' + i);
-    const icon = document.getElementById('faq-icon-' + i);
-    const isOpen = ans.style.display === 'block';
-    document.querySelectorAll('[id^="faq-answer-"]').forEach(function(el) { el.style.display = 'none'; });
-    document.querySelectorAll('[id^="faq-icon-"]').forEach(function(el) { el.textContent = '+'; el.style.transform = ''; });
-    if (!isOpen) {
-      ans.style.display = 'block';
-      icon.textContent = '−';
-      icon.style.transform = 'rotate(180deg)';
-    }
-  }
-
-  function submitForm(e) {
-    e.preventDefault();
-    document.getElementById('form-success').style.display = 'block';
-    e.target.reset();
-    setTimeout(function() { document.getElementById('form-success').style.display = 'none'; }, 5000);
-  }
-
-  // Scroll animations (skip first visible section)
-  const observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.08 });
-
-  document.querySelectorAll('section').forEach(function(el, i) {
-    if (i === 0) return;
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(30px)';
-    el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
-    observer.observe(el);
-  });
+  ${getSharedJS(palette)}
 </script>
 </body>
 </html>`
