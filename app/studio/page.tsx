@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   Sparkles, Eye, FileText, Code2, Download, MessageSquare,
   LayoutGrid, Zap, Bot, GitCompareArrows, Image, Package,
-  ClipboardList, Video, ShieldCheck, ChevronLeft, Monitor,
+  ClipboardList, Video, ShieldCheck, ChevronLeft, Monitor, Mail,
 } from 'lucide-react'
 import type { ChatMessage, GeneratedProject, StudioTab } from '@/types'
 import { getCredits, consumeCredits, canAfford } from '@/lib/credits'
@@ -33,6 +33,7 @@ import QuoteBuilderPanel from '@/components/QuoteBuilderPanel'
 import QualityCheckPanel from '@/components/QualityCheckPanel'
 import VideoDemoPanel from '@/components/VideoDemoPanel'
 // TODO: import ChatbotPanel from '@/components/ChatbotPanel' — awaiting parallel agent
+import ResendAutomationPanel from '@/components/ResendAutomationPanel'
 import PhotoUploader from '@/components/PhotoUploader'
 import ErrorState from '@/components/ErrorState'
 import { cn } from '@/lib/utils'
@@ -45,6 +46,7 @@ const TABS: Array<{ id: StudioTab; label: string; icon: React.ElementType; group
   { id: 'offer', label: 'Offre', icon: Package },
   { id: 'quote', label: 'Devis', icon: ClipboardList },
   { id: 'chatbot', label: 'Chatbot', icon: Bot },
+  { id: 'resend', label: 'Leads', icon: Mail },
   { id: 'video', label: 'Vidéo', icon: Video },
   { id: 'quality', label: 'Qualité', icon: ShieldCheck },
   { id: 'comparison', label: 'Avant/Après', icon: GitCompareArrows },
@@ -398,6 +400,11 @@ export default function StudioPage() {
                 <p className="font-syne font-bold text-ink">Chatbot IA</p>
                 <p className="text-sm max-w-xs">Le module Chatbot est en cours d&apos;initialisation. Revenez dans quelques instants.</p>
               </div>
+            </div>
+          )}
+          {activeTab === 'resend' && currentProject && (
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <ResendAutomationPanel project={currentProject} />
             </div>
           )}
           {activeTab === 'video' && currentProject && (

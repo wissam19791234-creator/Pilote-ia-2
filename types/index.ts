@@ -305,6 +305,7 @@ export type StudioTab =
   | 'offer'
   | 'quote'
   | 'chatbot'
+  | 'resend'
   | 'video'
   | 'quality'
   | 'comparison'

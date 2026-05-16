@@ -22,6 +22,7 @@
     "react": "^18",
     "react-dom": "^18",
     "remotion": "^4.0.462",
+    "resend": "^6.12.3",
     "tailwind-merge": "^2.3.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.13"
