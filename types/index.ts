@@ -84,6 +84,57 @@ export interface GeneratedProject {
   photos: string[]
   createdAt: string
   status: 'draft' | 'generated' | 'exported'
+  automationSales?: AutomationSalesData
+}
+
+export interface AutomationOptionDetails {
+  formQuestions?: string[]
+  whatsappMessage?: string
+  whatsappExample?: string
+  emailPro?: string
+  emailChalleureux?: string
+  followupJ1?: string
+  followupJ3?: string
+  followupJ7?: string
+  scoreFields?: string[]
+  crmColumns?: string[]
+  dashboardMetrics?: string[]
+  bookingInfo?: string
+  paymentInfo?: string
+}
+
+export interface AutomationOption {
+  id: string
+  name: string
+  category: string
+  problem: string
+  benefit: string
+  complexity: 'simple' | 'moyenne' | 'avancée'
+  perceivedValue: 'faible' | 'forte' | 'premium'
+  salesPitch: string
+  recommended: boolean
+  price: string
+  details: AutomationOptionDetails
+}
+
+export interface CommercialPack {
+  id: string
+  name: string
+  tagline: string
+  price: string
+  priceHigh: string
+  features: string[]
+  automationIds: string[]
+  highlighted: boolean
+  color: string
+}
+
+export interface AutomationSalesData {
+  options: AutomationOption[]
+  packs: CommercialPack[]
+  clientArgument: string
+  priceScript: string
+  readyMessage: string
 }
 
 export interface ChatMessage {
@@ -93,4 +144,4 @@ export interface ChatMessage {
   timestamp: string
 }
 
-export type StudioTab = 'preview' | 'plan' | 'files' | 'code' | 'export' | 'message'
+export type StudioTab = 'preview' | 'plan' | 'files' | 'code' | 'export' | 'message' | 'automations'

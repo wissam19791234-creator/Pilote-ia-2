@@ -7,6 +7,7 @@ import type {
   Testimonial,
   GeneratedFile,
 } from '@/types'
+import { generateAutomationSales } from '@/lib/automationOptions'
 
 // ─── Sector detection ────────────────────────────────────────────────────────
 
@@ -571,7 +572,7 @@ ${ecommerceSection}
         </div>
       </div>
     </div>
-    <div style="border-top:1px solid #ffffff11;padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:gap;gap:12px;">
+    <div style="border-top:1px solid #ffffff11;padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
       <p style="color:#6b7280;font-size:0.85rem;">© ${new Date().getFullYear()} ${businessName}. Tous droits réservés.</p>
       <div style="display:flex;gap:24px;">
         <a href="#" style="color:#6b7280;font-size:0.85rem;transition:color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">Mentions légales</a>
@@ -606,20 +607,22 @@ ${automationNeeds.includes('WhatsApp Business') ? `<a href="https://wa.me/336000
     setTimeout(function() { document.getElementById('form-success').style.display = 'none'; }, 5000);
   }
 
-  // Intersection observer for animations
+  // Scroll animations (skip first visible section)
   const observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
         entry.target.style.opacity = '1';
         entry.target.style.transform = 'translateY(0)';
+        observer.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.1 });
+  }, { threshold: 0.08 });
 
-  document.querySelectorAll('section').forEach(function(el) {
+  document.querySelectorAll('section').forEach(function(el, i) {
+    if (i === 0) return;
     el.style.opacity = '0';
-    el.style.transform = 'translateY(20px)';
-    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    el.style.transform = 'translateY(30px)';
+    el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
     observer.observe(el);
   });
 </script>
@@ -729,6 +732,7 @@ export function generateProject(prompt: string, photos: string[]): GeneratedProj
     },
   ]
 
+  project.automationSales = generateAutomationSales(sector, businessName, city, goal)
   project.status = 'generated'
   return project
 }

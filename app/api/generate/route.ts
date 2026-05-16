@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { generateProject } from '@/lib/generator'
+import { generateProject, generateHTMLSite, generateClientMessage } from '@/lib/generator'
 import type { GeneratedProject } from '@/types'
 
 const SYSTEM_PROMPT = `Tu es un expert en copywriting et création de sites web pour commerces locaux français. Tu génères du contenu persuasif, authentique et adapté au secteur. Tu réponds UNIQUEMENT en JSON valide, sans markdown, sans explication.`
@@ -172,7 +172,6 @@ function mergeAIData(base: GeneratedProject, ai: Record<string, unknown>, photos
   }
 
   // Regenerate HTML with AI content
-  const { generateHTMLSite, generateClientMessage } = require('@/lib/generator')
   merged.html = generateHTMLSite(merged, photos)
   merged.copywriting.clientMessage = generateClientMessage(merged)
   merged.status = 'generated'
