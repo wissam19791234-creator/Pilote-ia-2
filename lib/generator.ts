@@ -10,6 +10,8 @@ import type {
 import { generateAutomationSales } from '@/lib/automationOptions'
 import { selectDAPreset } from '@/lib/designEngine'
 import type { DAPreset } from '@/lib/designEngine'
+import { generateChatbotHtml } from '@/lib/chatbotBuilder'
+import { getCurrentPlanId } from '@/lib/plans'
 
 // ─── Sector detection ────────────────────────────────────────────────────────
 
@@ -1191,6 +1193,11 @@ ${buildContactSection(preset, copywriting.ctaPrimary, services)}
 ${buildFooter(preset, businessName, city, sector, services)}
 
 ${automationNeeds.includes('WhatsApp Business') ? `<a href="https://wa.me/33600000000" style="position:fixed;bottom:24px;right:24px;width:58px;height:58px;background:#25d366;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;box-shadow:0 4px 16px rgba(37,211,102,0.45);z-index:9999;transition:all 0.2s;text-decoration:none;" onmouseover="this.style.transform='scale(1.12)'" onmouseout="this.style.transform=''">💬</a>` : ''}
+
+${(() => {
+  const planId = typeof window !== 'undefined' ? getCurrentPlanId() : 'free'
+  return generateChatbotHtml(sector, businessName, city, services, planId, palette.primary)
+})()}
 
 <script>
   ${getSharedJS(palette)}
