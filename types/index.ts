@@ -82,11 +82,11 @@ export interface GeneratedProject {
   files: GeneratedFile[]
   html: string
   photos: string[]
-  automationSalesOptions: AutomationSalesOption[]
-  recommendedPacks: RecommendedPack[]
-  automationArgumentary: string[]
-  automationPriceScript: string
-  automationReadyMessage: string
+  automationSalesOptions?: AutomationSalesOption[]
+  recommendedPacks?: RecommendedPack[]
+  automationArgumentary?: string[]
+  automationPriceScript?: string
+  automationReadyMessage?: string
   createdAt: string
   status: 'draft' | 'generated' | 'exported'
 }

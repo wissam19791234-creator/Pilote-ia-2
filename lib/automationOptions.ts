@@ -38,7 +38,9 @@ const sectorFormQuestions: Record<string, string[]> = {
   general: ['Type de besoin', 'Délai souhaité', 'Budget estimé'],
 }
 
-export function buildAutomationSalesModule(project: GeneratedProject): AutomationSalesModule {
+type AutomationProjectContext = Pick<GeneratedProject, 'sector' | 'goal' | 'businessName'>
+
+export function buildAutomationSalesModule(project: AutomationProjectContext): AutomationSalesModule {
   const questions = sectorFormQuestions[project.sector] ?? sectorFormQuestions.general
 
   const options: AutomationSalesOption[] = [

@@ -290,13 +290,14 @@ export function generateHTMLSite(project: GeneratedProject, photos: string[]): s
     </div>
   </section>` : ''
 
-  const salesAutomationSection = project.automationSalesOptions.length > 0 ? `
+  const salesAutomationOptions = project.automationSalesOptions ?? []
+  const salesAutomationSection = salesAutomationOptions.length > 0 ? `
   <section style="padding:80px 5%;background:${isDark ? '#0f0f14' : '#f7f8ff'};">
     <div style="max-width:1100px;margin:0 auto;">
       <h2 style="font-family:${headingFont};font-size:clamp(28px,4vw,42px);color:${palette.text};text-align:center;margin-bottom:18px;">Automatisations à vendre</h2>
       <p style="text-align:center;color:${palette.muted};max-width:700px;margin:0 auto 36px;">Options commerciales prêtes pour générer plus de demandes qualifiées.</p>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;">
-        ${project.automationSalesOptions.filter((o) => o.recommended).slice(0, 6).map((o) => `
+        ${salesAutomationOptions.filter((o) => o.recommended).slice(0, 6).map((o) => `
         <div style="background:${isDark ? '#1a1a1f' : '#fff'};border:1px solid ${palette.primary}33;border-radius:14px;padding:18px;">
           <div style="font-weight:700;color:${palette.text};margin-bottom:6px;">${o.name}</div>
           <p style="color:${palette.muted};font-size:0.9rem;margin-bottom:8px;">${o.businessBenefit}</p>
@@ -705,7 +706,7 @@ export function generateProject(prompt: string, photos: string[]): GeneratedProj
 
   const projectId = `proj_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
-  const baseProject: Partial<GeneratedProject> = {
+  const baseProject = {
     id: projectId,
     projectName: `Site ${businessName} — ${city}`,
     businessName,
@@ -726,7 +727,7 @@ export function generateProject(prompt: string, photos: string[]): GeneratedProj
     sections,
   }
 
-  const automationModule = buildAutomationSalesModule(baseProject as GeneratedProject)
+  const automationModule = buildAutomationSalesModule(baseProject)
 
   const project: GeneratedProject = {
     ...baseProject,

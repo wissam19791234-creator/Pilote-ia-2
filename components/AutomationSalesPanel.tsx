@@ -7,7 +7,7 @@ export default function AutomationSalesPanel({ project }: { project: GeneratedPr
       <section>
         <h3 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-2">Options recommandées</h3>
         <div className="grid gap-3">
-          {project.automationSalesOptions.map((option) => (
+          {(project.automationSalesOptions ?? []).map((option) => (
             <div key={option.key} className="bg-card border border-border rounded-xl p-4">
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <p className="font-semibold text-ink">{option.name}</p>
@@ -17,7 +17,7 @@ export default function AutomationSalesPanel({ project }: { project: GeneratedPr
               </div>
               <p className="text-sm text-muted">🎯 Problème: {option.problemSolved}</p>
               <p className="text-sm text-muted">✅ Bénéfice: {option.businessBenefit}</p>
-              <p className="text-sm text-ink mt-1">💬 "{option.salesPitch}"</p>
+              <p className="text-sm text-ink mt-1">💬 &ldquo;{option.salesPitch}&rdquo;</p>
             </div>
           ))}
         </div>
@@ -26,7 +26,7 @@ export default function AutomationSalesPanel({ project }: { project: GeneratedPr
       <section>
         <h3 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-2">3 packs commerciaux</h3>
         <div className="grid md:grid-cols-3 gap-3">
-          {project.recommendedPacks.map((pack) => (
+          {(project.recommendedPacks ?? []).map((pack) => (
             <div key={pack.id} className="bg-card border border-border rounded-xl p-4">
               <p className="font-semibold text-ink mb-2">{pack.name}</p>
               <ul className="text-xs text-muted list-disc pl-4 space-y-1">
@@ -41,10 +41,10 @@ export default function AutomationSalesPanel({ project }: { project: GeneratedPr
       <section className="bg-card border border-border rounded-xl p-4">
         <h3 className="font-semibold text-ink mb-2">Argumentaire client & script prix</h3>
         <ul className="list-disc pl-5 text-sm text-muted space-y-1 mb-3">
-          {project.automationArgumentary.map((a) => <li key={a}>{a}</li>)}
+          {(project.automationArgumentary ?? []).map((a) => <li key={a}>{a}</li>)}
         </ul>
-        <p className="text-sm text-ink mb-2">💶 {project.automationPriceScript}</p>
-        <p className="text-sm text-primary-light">📩 {project.automationReadyMessage}</p>
+        <p className="text-sm text-ink mb-2">💶 {project.automationPriceScript ?? ''}</p>
+        <p className="text-sm text-primary-light">📩 {project.automationReadyMessage ?? ''}</p>
       </section>
     </div>
   )
