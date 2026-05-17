@@ -15,18 +15,18 @@ export type CreditAction =
   | 'generate_sales_pack'
 
 export const CREDIT_COSTS: Record<CreditAction, number> = {
-  generate_site: 5,
-  generate_site_ecommerce: 10,
-  generate_site_ai_images: 8,
-  generate_site_automations: 12,
-  generate_video: 15,
-  generate_variation: 3,
-  chat_modify: 2,
-  generate_ai_images: 4,
-  export_zip: 2,
-  generate_chatbot_simple: 6,
-  generate_chatbot_advanced: 12,
-  generate_sales_pack: 5,
+  generate_site: 1,
+  generate_site_ecommerce: 2,
+  generate_site_ai_images: 2,
+  generate_site_automations: 2,
+  generate_video: 3,
+  generate_variation: 1,
+  chat_modify: 1,
+  generate_ai_images: 1,
+  export_zip: 1,
+  generate_chatbot_simple: 1,
+  generate_chatbot_advanced: 2,
+  generate_sales_pack: 1,
 }
 
 export interface CreditHistoryEntry {

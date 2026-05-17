@@ -630,88 +630,110 @@ export default function HomePage() {
 
       {/* ═══════════════════════ PRICING ═══════════════════════ */}
       <section className="py-24 px-6 bg-surface/50">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <div className="inline-block bg-accent/10 border border-accent/20 text-accent text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
-              Offre de lancement · Prix fondateurs
+            <div className="inline-block bg-violet-100 border border-violet-200 text-violet-700 text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+              🎁 Essai gratuit 7 jours — aucune carte bancaire
             </div>
             <h2 className="font-syne font-bold text-ink mb-3" style={{ fontSize: 'clamp(28px, 4vw, 48px)' }}>
-              Tarifs simples et transparents
+              Créez des sites qui convertissent.
+              <br />
+              <span className="gradient-text">Vendez plus. Automatiquement.</span>
             </h2>
-            <p className="text-muted">Commencez avec 12 crédits offerts. Upgradez quand vous en avez besoin.</p>
+            <p className="text-muted">Rejoignez les agences et freelances qui génèrent des sites premium en 5 minutes.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-5">
+          <div className="grid md:grid-cols-3 gap-6 items-center">
             {[
               {
                 name: 'Starter',
+                tagline: 'Pour démarrer et tester',
+                oldPrice: '39€',
                 price: '19€',
-                period: '/mois',
+                perDay: '0,65',
                 badge: null,
-                features: ['5 sites/mois', 'Export HTML', 'Message client', '10 secteurs', 'Support email'],
-                cta: 'Commencer',
+                features: ['8 sites générés par mois', 'Export HTML prêt à livrer', '5 styles de design', 'Message client inclus', 'Support par email'],
+                cta: 'Choisir Starter',
+                href: 'https://buy.stripe.com/eVq7sE0WSbZN7b52FyfjG04',
                 highlight: false,
               },
               {
                 name: 'Pro',
-                price: '39€',
-                period: '/mois',
-                badge: '✦ Populaire',
-                features: ['20 sites/mois', 'Upload photos (8/site)', 'Modifications par chat', '30+ secteurs', 'Automations IA', 'Export ZIP (bientôt)', 'Support prioritaire'],
-                cta: 'Essayer 14 jours offerts',
+                tagline: 'Pour vendre sérieusement',
+                oldPrice: '120€',
+                price: '59€',
+                perDay: '2',
+                badge: '⭐ Le plus populaire',
+                features: ['25 sites par mois', 'Export ZIP complet', 'Images IA (DALL-E 3)', 'Chatbot lead capture intégré', 'Automatisations & devis intelligent', 'Pack commercial complet', 'Support prioritaire'],
+                cta: 'Choisir Pro',
+                href: 'https://buy.stripe.com/bJe8wIdJEfbZdzt2FyfjG05',
                 highlight: true,
               },
               {
-                name: 'Agence',
-                price: '79€',
-                period: '/mois',
+                name: 'Agency',
+                tagline: 'Pour les agences qui scalent',
+                oldPrice: '299€',
+                price: '149€',
+                perDay: '5',
                 badge: null,
-                features: ['60 sites/mois', '3 comptes utilisateurs', 'Workspace agence', 'Branding personnalisé', 'Account manager dédié'],
-                cta: 'Nous contacter',
+                features: ['80 sites par mois', 'Chatbot avancé + lead scoring', 'Mini CRM intégré', 'Projets illimités', 'Variantes design illimitées', 'Support dédié'],
+                cta: 'Choisir Agency',
+                href: 'https://buy.stripe.com/bJe7sEeNI1l9anh93WfjG06',
                 highlight: false,
               },
             ].map((plan) => (
               <div
                 key={plan.name}
-                className={`card p-6 flex flex-col relative ${plan.highlight ? 'border-primary/50 shadow-[0_0_40px_rgba(124,58,237,0.2)]' : ''}`}
+                className={`relative rounded-2xl flex flex-col overflow-visible bg-card transition-all ${
+                  plan.highlight
+                    ? 'border-2 border-primary shadow-[0_0_40px_rgba(124,58,237,0.2)] md:scale-105'
+                    : 'border border-border shadow-sm'
+                }`}
               >
                 {plan.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="text-xs font-bold bg-primary text-white px-4 py-1 rounded-full shadow-glow">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                    <span className="inline-block text-xs font-bold bg-primary text-white px-4 py-1.5 rounded-full shadow whitespace-nowrap">
                       {plan.badge}
                     </span>
                   </div>
                 )}
-                <h3 className="font-syne font-bold text-xl text-ink mb-1 mt-2">{plan.name}</h3>
-                <div className="mb-5">
-                  <span className="text-4xl font-bold font-syne text-ink">{plan.price}</span>
-                  <span className="text-muted text-sm">{plan.period}</span>
+                <div className="p-6 flex flex-col flex-1">
+                  <h3 className="font-syne font-bold text-xl text-ink mb-0.5 mt-2">{plan.name}</h3>
+                  <p className="text-sm text-muted mb-4">{plan.tagline}</p>
+                  <div className="mb-5">
+                    <div className="text-sm text-muted line-through mb-0.5">{plan.oldPrice}/mois</div>
+                    <div className="flex items-end gap-1">
+                      <span className="font-syne font-extrabold text-ink text-4xl">{plan.price}</span>
+                      <span className="text-muted text-sm mb-1">/mois</span>
+                    </div>
+                    <p className="text-xs text-muted italic mt-1">soit moins de {plan.perDay}€/jour</p>
+                  </div>
+                  <ul className="flex flex-col gap-2.5 flex-1 mb-6">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-center gap-2 text-sm">
+                        <Check className="w-4 h-4 text-green shrink-0" />
+                        <span className="text-ink">{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href={plan.href}
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl font-syne font-bold text-sm transition-all hover:-translate-y-0.5 ${
+                      plan.highlight
+                        ? 'gradient-bg text-white shadow-primary hover:shadow-primary-hover'
+                        : 'border border-primary text-primary hover:bg-primary/5'
+                    }`}
+                  >
+                    {plan.cta}
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
                 </div>
-                <ul className="flex flex-col gap-2.5 flex-1 mb-6">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm">
-                      <Check className="w-4 h-4 text-green shrink-0" />
-                      <span className="text-ink">{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href={plan.name === 'Agence' ? '/pricing' : '/studio'}
-                  className={`flex items-center justify-center gap-2 py-3 rounded-xl font-syne font-bold text-sm transition-all ${
-                    plan.highlight
-                      ? 'gradient-bg text-white shadow-primary hover:shadow-primary-hover hover:-translate-y-0.5'
-                      : 'bg-surface border border-border text-muted hover:text-ink hover:border-primary/30'
-                  }`}
-                >
-                  {plan.cta}
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
               </div>
             ))}
           </div>
-          <div className="text-center mt-8 flex flex-col items-center gap-2">
+          <div className="text-center mt-10 flex flex-col items-center gap-2">
             <p className="text-sm text-muted flex items-center gap-2">
               <Shield className="w-4 h-4 text-green" />
-              Remboursement intégral sous 14 jours · Aucune question posée
+              Satisfait ou remboursé 7 jours · Annulable à tout moment
             </p>
             <Link href="/pricing" className="text-sm text-primary-light hover:underline">
               Voir tous les détails →
